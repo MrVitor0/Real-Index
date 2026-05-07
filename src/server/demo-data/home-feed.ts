@@ -12,6 +12,7 @@ import {
   homeSidebarSchema,
   openMarketsSchema,
 } from "@/features/home/contracts/home-feed";
+import { createFeaturedMarketServerSnapshot } from "@/server/demo-data/featured-market-snapshot";
 
 const homeDataDirectory = path.join(process.cwd(), "data", "home");
 
@@ -25,7 +26,7 @@ async function readHomeSection<T>(
   return schema.parse(JSON.parse(fileContent));
 }
 
-export const getHomeFeedData = cache(async () => {
+const getBaseHomeFeedData = cache(async () => {
   const [navigation, featuredMarket, sidebar, openMarkets] = await Promise.all([
     readHomeSection("navigation.json", homeNavigationSchema),
     readHomeSection("featured-market.json", featuredMarketSchema),
@@ -40,3 +41,21 @@ export const getHomeFeedData = cache(async () => {
     openMarkets,
   });
 });
+
+export async function getHomeFeedData(now = new Date()) {
+  const baseData = await getBaseHomeFeedData();
+
+  return homeFeedDataSchema.parse({
+    ...baseData,
+    featuredMarket: createFeaturedMarketServerSnapshot(
+      baseData.featuredMarket,
+      now,
+    ),
+  });
+}
+
+export async function getHomeNavigation() {
+  const baseData = await getBaseHomeFeedData();
+
+  return baseData.navigation;
+}

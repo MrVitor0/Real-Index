@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@neondatabase/auth/ui/tailwind";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "./tailwind/palette.css";
@@ -17,9 +18,9 @@
     @apply bg-background text-foreground;
     min-height: 100vh;
     background-image:
-      radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 38%),
-      radial-gradient(circle at 100% 0%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 28%),
-      linear-gradient(180deg, color-mix(in oklab, var(--background) 92%, black 8%), var(--background));
+      radial-gradient(circle at 50% -18%, color-mix(in oklab, white 7%, transparent), transparent 34%),
+      radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--primary) 9%, transparent), transparent 32%),
+      linear-gradient(180deg, color-mix(in oklab, var(--background) 96%, black 4%), var(--background));
     background-attachment: fixed;
   }
   ::selection {
@@ -29,6 +30,15 @@
 }
 
 @layer utilities {
+  .real-auth-ui .grid.gap-4 > .flex.w-full.items-center.justify-between.gap-4 > button[data-slot="button"] {
+    cursor: pointer;
+  }
+
+  .real-auth-ui .grid.gap-4 > .flex.w-full.items-center.justify-between.gap-4 > button[data-slot="button"]:hover {
+    color: var(--foreground);
+    opacity: 0.88;
+  }
+
   .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -50,15 +60,15 @@
 
   .surface-noise {
     background-image:
-      linear-gradient(135deg, color-mix(in oklab, var(--primary) 8%, transparent), transparent 28%),
-      linear-gradient(315deg, color-mix(in oklab, var(--accent) 6%, transparent), transparent 30%);
+      linear-gradient(180deg, color-mix(in oklab, white 3%, transparent), transparent 18%),
+      linear-gradient(135deg, color-mix(in oklab, var(--primary) 4%, transparent), transparent 32%),
+      linear-gradient(315deg, color-mix(in oklab, white 2%, transparent), transparent 34%);
   }
 
   .code-surface {
     background-image:
-      radial-gradient(circle at top right, color-mix(in oklab, var(--primary) 10%, transparent), transparent 34%),
-      radial-gradient(circle at bottom left, color-mix(in oklab, var(--accent) 8%, transparent), transparent 40%),
-      linear-gradient(135deg, color-mix(in oklab, var(--primary) 8%, transparent), transparent 30%),
-      linear-gradient(315deg, color-mix(in oklab, var(--accent) 6%, transparent), transparent 34%);
+      radial-gradient(circle at top right, color-mix(in oklab, white 4%, transparent), transparent 32%),
+      linear-gradient(140deg, color-mix(in oklab, var(--primary) 6%, transparent), transparent 28%),
+      linear-gradient(320deg, color-mix(in oklab, white 2%, transparent), transparent 36%);
   }
 }

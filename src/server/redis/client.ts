@@ -2,11 +2,11 @@ import "server-only";
 
 import { Redis } from "@upstash/redis";
 
-import { getRequiredServerEnv } from "@/lib/env";
+import { getRequiredRedisEnv } from "@/lib/env";
 
 function createRedis() {
   const { UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL } =
-    getRequiredServerEnv();
+    getRequiredRedisEnv();
 
   return new Redis({
     url: UPSTASH_REDIS_REST_URL,

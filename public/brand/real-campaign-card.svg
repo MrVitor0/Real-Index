@@ -1,0 +1,36 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1600" height="900" fill="#040A14" />
+    <circle cx="1320" cy="160" r="260" fill="#5FA7FF" opacity="0.08" />
+    <circle cx="220" cy="120" r="180" fill="#5FA7FF" opacity="0.06" />
+    <path d="M0 720C248 620 418 670 632 566C860 456 1048 474 1600 258" stroke="#5FA7FF"
+        stroke-width="2" opacity="0.15" />
+    <path d="M0 780C248 680 418 730 632 626C860 516 1048 534 1600 318" stroke="#5FA7FF"
+        stroke-width="2" opacity="0.08" />
+    <g transform="translate(96 90)">
+        <rect x="0" y="0" width="146" height="146" rx="38" fill="#07111F" />
+        <rect x="2" y="2" width="142" height="142" rx="36" stroke="#214367" stroke-width="4" />
+        <circle cx="73" cy="73" r="56" stroke="#5FA7FF" stroke-width="4" opacity="0.14" />
+        <circle cx="73" cy="73" r="35" stroke="#5FA7FF" stroke-width="4" opacity="0.28" />
+        <path d="M34 93L56 76L72 84L99 46L116 60" stroke="#86C4FF" stroke-width="10"
+            stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="116" cy="60" r="12" fill="#9DD0FF" />
+        <circle cx="116" cy="60" r="20" stroke="#9DD0FF" stroke-width="4" opacity="0.35" />
+        <path d="M42 108H110" stroke="#5FA7FF" stroke-width="6" stroke-linecap="round"
+            opacity="0.24" />
+    </g>
+    <text x="284" y="146" fill="#5FA7FF" font-family="IBM Plex Mono, Arial, sans-serif"
+        font-size="30" letter-spacing="8">FORECAST SOCIAL PARA COMUNIDADES TECH</text>
+    <text x="96" y="332" fill="#F5F8FC" font-family="Space Grotesk, Arial, sans-serif"
+        font-size="112" font-weight="700">REAL Severity Index</text>
+    <text x="96" y="436" fill="#C2D0E0" font-family="Space Grotesk, Arial, sans-serif"
+        font-size="46">Lance forecasts, acompanhe sinais e suba no ranking da comunidade.</text>
+    <text x="96" y="500" fill="#C2D0E0" font-family="Space Grotesk, Arial, sans-serif"
+        font-size="46">Tudo com REAL Credits virtuais, sem saque e sem compra de dinheiro.</text>
+    <rect x="96" y="594" width="818" height="92" rx="30" fill="#0B1628" stroke="#214367"
+        stroke-width="2" />
+    <text x="132" y="652" fill="#F5F8FC" font-family="IBM Plex Mono, Arial, sans-serif"
+        font-size="32">RANKINGS AO VIVO • FORECASTS GAMIFICADOS • COMUNIDADE</text>
+    <text x="96" y="794" fill="#8FA3BB" font-family="IBM Plex Mono, Arial, sans-serif"
+        font-size="28">EXPERIENCIA SOCIAL E GAMIFICADA. SEM DEPOSITO, SEM SAQUE, SEM PAYOUT, SEM
+        PREMIO FINANCEIRO.</text>
+</svg>

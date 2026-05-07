@@ -14,8 +14,15 @@
 
 1. Run npm install
 2. Copy .env.example to .env
-3. Fill the Neon and Upstash credentials
+3. Fill the Neon, Neon Auth, and Upstash credentials
 4. Run npm run dev
+
+## Neon Auth
+
+- Enable Auth in the Neon Console and copy the Auth URL to NEON_AUTH_BASE_URL.
+- Generate NEON_AUTH_COOKIE_SECRET with: node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
+- Google login can be enabled in Neon Auth with shared development credentials, then customized later in production.
+- The app now ships with ready-to-use routes for login, signup, and account: /login, /cadastro, and /conta.
 
 ## Useful Commands
 

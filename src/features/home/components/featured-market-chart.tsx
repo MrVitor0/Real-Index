@@ -14,12 +14,20 @@ import type {
 } from "@/features/home/contracts/home-feed";
 import { formatProbability, getToneUi } from "@/features/home/lib/presentation";
 
+type LiveDotProps = {
+  cx?: number;
+  cy?: number;
+  index?: number;
+  stroke?: string;
+  totalPoints: number;
+};
+
 type FeaturedMarketChartProps = {
   outcomes: FeaturedOutcome[];
   points: FeaturedChartPoint[];
   yAxisTicks: number[];
   headlineOutcomeId: string;
-  height?: number | string;
+  height?: number | `${number}%`;
 };
 
 type TooltipPayloadItem = {
@@ -79,6 +87,45 @@ function ChartTooltip({
   );
 }
 
+function HeadlineLiveDot({ cx, cy, index, stroke, totalPoints }: LiveDotProps) {
+  if (
+    typeof cx !== "number" ||
+    typeof cy !== "number" ||
+    typeof index !== "number" ||
+    !stroke ||
+    index !== totalPoints - 1
+  ) {
+    return null;
+  }
+
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={6} fill={stroke} opacity={0.18}>
+        <animate
+          attributeName="r"
+          values="6;14;6"
+          dur="1.8s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0.18;0;0.18"
+          dur="1.8s"
+          repeatCount="indefinite"
+        />
+      </circle>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={4.5}
+        fill={stroke}
+        stroke="rgba(7,12,18,0.92)"
+        strokeWidth={2}
+      />
+    </g>
+  );
+}
+
 export function FeaturedMarketChart({
   outcomes,
   points,
@@ -106,6 +153,7 @@ export function FeaturedMarketChart({
           dataKey="label"
           axisLine={false}
           tickLine={false}
+          minTickGap={22}
           tick={{ fill: "rgba(255,255,255,0.36)", fontSize: 11 }}
         />
         <YAxis
@@ -129,11 +177,29 @@ export function FeaturedMarketChart({
           return (
             <Line
               key={outcome.id}
-              type="monotone"
+              type="monotoneX"
               dataKey={outcome.id}
               stroke={toneUi.line}
+              strokeLinecap="round"
               strokeWidth={outcome.id === headlineOutcomeId ? 3.25 : 2.1}
-              dot={false}
+              isAnimationActive
+              animationDuration={520}
+              animationEasing="ease-out"
+              dot={
+                outcome.id === headlineOutcomeId
+                  ? (dotProps: {
+                      cx?: number;
+                      cy?: number;
+                      index?: number;
+                    }) => (
+                      <HeadlineLiveDot
+                        {...dotProps}
+                        stroke={toneUi.line}
+                        totalPoints={points.length}
+                      />
+                    )
+                  : false
+              }
               activeDot={{
                 r: 4,
                 strokeWidth: 0,

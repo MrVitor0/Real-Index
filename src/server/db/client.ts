@@ -3,12 +3,12 @@ import "server-only";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 
-import { getRequiredServerEnv } from "@/lib/env";
+import { getRequiredDatabaseEnv } from "@/lib/env";
 
 import * as schema from "./schema";
 
 function createDatabase() {
-  const { DATABASE_URL } = getRequiredServerEnv();
+  const { DATABASE_URL } = getRequiredDatabaseEnv();
   const client = neon(DATABASE_URL);
 
   return drizzle({ client, schema });

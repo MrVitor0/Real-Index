@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 
 import { homeFeedResponseSchema } from "@/features/home/contracts/home-feed";
 import { createRouteContext } from "@/server/api/route-context";
-import { getHomeFeedData } from "@/server/demo-data/home-feed";
+import { getHomeFeedData } from "@/server/markets/catalog";
 
 export async function GET(request: Request) {
-  const context = createRouteContext(request);
+  const context = await createRouteContext(request);
 
   try {
     const data = await getHomeFeedData();

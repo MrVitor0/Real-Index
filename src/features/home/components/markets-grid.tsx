@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  Bookmark,
-  Search,
-  SlidersHorizontal,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
+import Link from "next/link";
+import type { Route } from "next";
+import { Bookmark, Search, SlidersHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,74 +33,63 @@ function MarketCardItem({ market }: { market: MarketCard }) {
     market.tags[0] ??
     "Mercado";
   const progressWidth = `${Math.max(market.probability, 6)}%`;
+  const marketDetailHref = `/radar/${market.id}` as Route;
 
   return (
-    <Card className="code-surface group h-full border-white/7 bg-market-surface/94 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.95)] transition-all duration-200 hover:-translate-y-1 hover:border-white/12 hover:shadow-[0_30px_85px_-40px_rgba(0,0,0,0.98)]">
-      <CardContent className="flex h-full flex-col gap-4 p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-11 w-11 items-center justify-center rounded-2xl border text-sm font-semibold tracking-[0.16em] ${toneUi.soft}`}
-            >
-              {market.iconLabel}
+    <Link href={marketDetailHref} className="block h-full">
+      <Card className="code-surface group h-full border-white/7 bg-market-surface/94 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.95)] transition-all duration-200 hover:-translate-y-1 hover:border-white/12 hover:shadow-[0_30px_85px_-40px_rgba(0,0,0,0.98)]">
+        <CardContent className="flex h-full flex-col gap-4 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex h-11 w-11 items-center justify-center rounded-2xl border text-sm font-semibold tracking-[0.16em] ${toneUi.soft}`}
+              >
+                {market.iconLabel}
+              </div>
+              <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/46">
+                [{primaryTag}]
+              </span>
             </div>
-            <span className="rounded-full border border-white/8 bg-white/[0.03] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/46">
-              [{primaryTag}]
-            </span>
-          </div>
 
-          <div className="text-right">
-            <p className="text-2xl font-semibold tracking-tight text-white">
-              {formatProbability(market.probability)}
-            </p>
-            <p className={`text-xs font-medium ${toneUi.text}`}>
-              {market.movementLabel}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="text-base font-semibold leading-6 text-white">
-            {market.title}
-          </h3>
-          <p className="text-sm text-white/45">{market.subtitle}</p>
-        </div>
-
-        <div className="space-y-2.5">
-          <div className="h-1.5 rounded-full bg-white/6">
-            <div
-              className={`h-full rounded-full ${toneUi.dot}`}
-              style={{ width: progressWidth }}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div
-              className={`rounded-2xl border px-3 py-2 text-center text-sm font-medium ${toneUi.soft}`}
-            >
-              {market.yesPriceLabel}
-            </div>
-            <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2 text-center text-sm font-medium text-white/76">
-              {market.noPriceLabel}
+            <div className="text-right">
+              <p className="text-2xl font-semibold tracking-tight text-white">
+                {formatProbability(market.probability)}
+              </p>
+              <p className={`text-xs font-medium ${toneUi.text}`}>
+                {market.movementLabel}
+              </p>
             </div>
           </div>
-        </div>
 
-        <div className="mt-auto flex items-center justify-between gap-3 text-xs text-white/42">
-          <span className="font-mono uppercase tracking-[0.16em] text-white/38">
-            {market.volumeLabel}
-          </span>
-          <div className="flex items-center gap-2">
-            {market.direction === "up" ? (
-              <TrendingUp className={`h-3.5 w-3.5 ${toneUi.text}`} />
-            ) : market.direction === "down" ? (
-              <TrendingDown className={`h-3.5 w-3.5 ${toneUi.text}`} />
-            ) : null}
-            <span>{primaryTag}</span>
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold leading-6 text-white">
+              {market.title}
+            </h3>
+            <p className="text-sm text-white/45">{market.subtitle}</p>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+
+          <div className="mt-auto space-y-2.5">
+            <div className="h-1.5 rounded-full bg-white/6">
+              <div
+                className={`h-full rounded-full ${toneUi.dot}`}
+                style={{ width: progressWidth }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div
+                className={`rounded-2xl border px-3 py-2 text-center text-sm font-medium ${toneUi.soft}`}
+              >
+                {market.yesPriceLabel}
+              </div>
+              <div className="rounded-2xl border border-white/8 bg-white/3 px-3 py-2 text-center text-sm font-medium text-white/76">
+                {market.noPriceLabel}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
@@ -119,48 +104,23 @@ export function MarketsGrid({
 }: MarketsGridProps) {
   const { ref: tabsRef, dragScrollProps: tabsDragScrollProps } =
     useHorizontalDragScroll<HTMLDivElement>();
+  const accountRoute = "/conta" as Route;
+
+  const focusSearchInput = () => {
+    const searchInput = document.getElementById("home-search");
+
+    if (searchInput instanceof HTMLInputElement) {
+      searchInput.focus();
+      searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const focusFilters = () => {
+    tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
 
   return (
     <section id="markets" className="space-y-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 className="text-3xl font-semibold tracking-tight text-white">
-            {title}
-          </h2>
-        </div>
-
-        <div className="flex items-center gap-2 self-start lg:self-auto">
-          {hasActiveSearch ? (
-            <Badge className="rounded-full border-white/8 bg-white/[0.05] px-3 py-1 text-xs font-medium text-white/72 hover:bg-white/[0.05]">
-              {'Filtrado por "'}
-              {searchQuery}
-              {'"'}
-            </Badge>
-          ) : null}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-2xl border border-white/8 bg-white/[0.03] text-white/72 hover:bg-white/8 hover:text-white"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-2xl border border-white/8 bg-white/[0.03] text-white/72 hover:bg-white/8 hover:text-white"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-2xl border border-white/8 bg-white/[0.03] text-white/72 hover:bg-white/8 hover:text-white"
-          >
-            <Bookmark className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
       <div
         ref={tabsRef}
         className="scrollbar-hidden flex gap-2 overflow-x-auto pb-1 select-none"
@@ -175,7 +135,7 @@ export function MarketsGrid({
               "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
               activeTab === tab.label
                 ? "border-primary/30 bg-primary/15 text-primary"
-                : "border-white/8 bg-white/[0.03] text-white/56 hover:bg-white/[0.06] hover:text-white",
+                : "border-white/8 bg-white/3 text-white/56 hover:bg-white/6 hover:text-white",
             )}
           >
             <span className="font-mono text-[11px] text-white/34">[</span>

@@ -13,6 +13,8 @@ type HomeFeedState = {
   error: string | null;
 };
 
+const BACKGROUND_REFRESH_MS = 5_000;
+
 async function fetchHomeFeed(signal: AbortSignal) {
   const response = await fetch("/api/v1/home-feed", {
     method: "GET",
@@ -43,7 +45,7 @@ export function useHomeFeed() {
   const loadHomeFeed = useEffectEvent(async (signal: AbortSignal) => {
     setState((currentState) => ({
       ...currentState,
-      status: "loading",
+      status: currentState.data ? currentState.status : "loading",
       error: null,
     }));
 
@@ -76,12 +78,35 @@ export function useHomeFeed() {
   });
 
   useEffect(() => {
-    const abortController = new AbortController();
+    let isCancelled = false;
+    let timeoutId: number | null = null;
+    let activeAbortController: AbortController | null = null;
 
-    void loadHomeFeed(abortController.signal);
+    const loadAndSchedule = async () => {
+      activeAbortController?.abort();
+      activeAbortController = new AbortController();
+
+      await loadHomeFeed(activeAbortController.signal);
+
+      if (isCancelled) {
+        return;
+      }
+
+      timeoutId = window.setTimeout(() => {
+        void loadAndSchedule();
+      }, BACKGROUND_REFRESH_MS);
+    };
+
+    void loadAndSchedule();
 
     return () => {
-      abortController.abort();
+      isCancelled = true;
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+
+      activeAbortController?.abort();
     };
   }, [reloadKey]);
 

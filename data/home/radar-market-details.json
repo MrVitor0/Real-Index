@@ -1,0 +1,106 @@
+[
+  {
+    "id": "compilador-react-bases",
+    "overview": "Esse radar acompanha se a correcao mais recente do compilador do React vai reduzir rerenders ruins nas bases iniciais que viraram referencia na comunidade.",
+    "rules": [
+      "Resolve para o lado positivo se os relatos de benchmark, issues abertas e rollouts em base modelo apontarem queda clara nos rerenders ruins ate o horario de fechamento.",
+      "Relatos isolados sem reproducao publica ou ganhos apenas em ambiente de laboratorio nao contam como confirmacao suficiente.",
+      "Se a correcao vier acompanhada de regressao equivalente em hydration ou build, o sinal positivo perde forca no painel final."
+    ],
+    "context": [
+      "O interesse nesse item cresceu porque varias stacks de front-end passaram a usar repositorios iniciais com o compilador ativado por padrao.",
+      "Mantenedores e times de DX estao comparando traces de render, tempo de interacao e estabilidade de devtools para medir se a melhoria e perceptivel de verdade."
+    ]
+  },
+  {
+    "id": "latencia-registro-npm",
+    "overview": "O mercado observa se a latencia do registro do npm permanece previsivel durante uma janela mais pesada de publicacoes ligadas a codigo aberto.",
+    "rules": [
+      "Conta como sinal positivo se os tempos de publicacao e propagacao permanecerem dentro da faixa normal reportada pela comunidade durante o periodo.",
+      "Erros breves e pontuais contam apenas se nao provocarem fila ou atraso material nas CIs acompanhadas pelo radar.",
+      "Se o gargalo principal vier de provedores externos de rede e nao do registro em si, o efeito entra so como nota de contexto."
+    ],
+    "context": [
+      "Boa parte dos pacotes monitorados entra em cadeia de dependencia critica, entao qualquer atraso pequeno no registro reverbera rapido em pipelines globais.",
+      "O radar cruza conversas de mantenedores, status pages e tempo medio de propagacao para separar rumor de degradacao real."
+    ]
+  },
+  {
+    "id": "fila-actions-europa",
+    "overview": "Aqui o foco e medir se a fila dos executores europeus do GitHub Actions volta ao normal antes do inicio da maratona principal de deploys.",
+    "rules": [
+      "O lado positivo vence se a fila residual cair e se os runners voltarem a tempos medianos de execucao antes da abertura da janela acompanhada.",
+      "Atrasos localizados em um tipo especifico de runner nao invalidam o resultado se o restante do pool estiver normalizado.",
+      "Mudancas cosméticas no status page sem melhora real na fila nao contam como resolucao."
+    ],
+    "context": [
+      "A demanda cresce em ondas quando a comunidade concentra releases antes de eventos, e a regiao da UE costuma sentir esse pico primeiro.",
+      "Esse item virou referencia porque varias equipes de infra usam a mesma regiao como base de espelhamento e testes regulados."
+    ]
+  },
+  {
+    "id": "texto-fantasma-copilot",
+    "overview": "Esse item acompanha se o patch mais novo do VS Code Insiders reduz a tremida do texto fantasma do Copilot para a maioria dos cenarios reportados.",
+    "rules": [
+      "Resolve para o lado positivo se o feedback consolidado indicar melhora clara em edicao longa, arquivos grandes e scroll rapido.",
+      "Problemas que migrarem para uma extensao secundaria ou para configuracao experimental ficam registrados, mas nao contam como correcao total.",
+      "Uma reversao de patch por regressao visual pesa imediatamente contra o lado positivo."
+    ],
+    "context": [
+      "O problema ficou visivel porque afeta a sensacao de fluidez do editor mesmo quando a sugestao em si esta correta.",
+      "Relatos de times que usam monorepos extensos valem mais aqui porque representam os cenarios de stress mais parecidos com producao."
+    ]
+  },
+  {
+    "id": "onda-de-modelos-shadcn",
+    "overview": "O mercado mede se o proximo empurrao do shadcn/ui vai gerar um novo pico de remixes e modelos derivados em apenas 24 horas.",
+    "rules": [
+      "Conta como positivo se a comunidade publicar volume acima do patamar medio recente em templates, starters e variações abertas.",
+      "Forks vazios ou republicacoes automaticas sem ajuste material entram so como ruido e nao elevam o placar final.",
+      "Se o hype se concentrar em um unico video ou thread sem distribuicao real entre repositorios, a leitura positiva perde peso."
+    ],
+    "context": [
+      "Esse radar existe porque boa parte do ecossistema de UI replica os mesmos blocos em alta velocidade logo depois de um release relevante.",
+      "A combinacao de AI builders e bibliotecas prontas costuma multiplicar esse efeito em poucas horas, principalmente nos finais de semana."
+    ]
+  },
+  {
+    "id": "rotacao-de-token-codigo-aberto",
+    "overview": "Aqui a pergunta e se o bug de rotacao de token sera detectado pelas ferramentas dos mantenedores antes de afetar de verdade as CIs dos pacotes mais visiveis.",
+    "rules": [
+      "O lado positivo vence se as ferramentas de secret scanning, bots de maintainers ou smoke tests detectarem o problema antes da quebra ampla de pipeline.",
+      "Quebras isoladas em repositores de baixo alcance nao definem o resultado sozinhas se a cadeia principal se mantiver integra.",
+      "Se a mitigacao vier so depois de falha publica generalizada, o radar fecha contra a tese positiva."
+    ],
+    "context": [
+      "A comunidade ficou sensivel a esse tema depois de alguns incidentes recentes envolvendo expiracao silenciosa de credenciais e scripts de release automatizados.",
+      "O item mistura observabilidade de seguranca, qualidade de tooling e disciplina operacional dos mantenedores."
+    ]
+  },
+  {
+    "id": "comparativos-bun-noturno",
+    "overview": "Esse radar acompanha se a proxima noturna do Bun consegue sustentar a narrativa de performance durante uma nova rodada de comparativos da comunidade.",
+    "rules": [
+      "Resolve positivamente se os benchmarks compartilhados mantiverem vantagem consistente nos cenarios mais citados pela comunidade durante a janela observada.",
+      "Ganhos em apenas um tipo de workload nao bastam se os comparativos gerais mostrarem regressao relevante em runtime ou compatibilidade.",
+      "Resultados sem codigo aberto, sem comando reproduzivel ou sem hardware descrito entram apenas como ruído."
+    ],
+    "context": [
+      "Toda release noturna do Bun gera uma leva de threads comparando tempo de cold start, bundling e script execution.",
+      "A leitura desse item considera nao so o numero cru do benchmark, mas a capacidade de manter a historia quando o debate fica mais tecnico."
+    ]
+  },
+  {
+    "id": "rfc-burnout-mantenedores",
+    "overview": "Esse item mede se a discussao da RFC sobre burnout de mantenedores ultrapassa uma nova camada de tracao antes que a moderacao segure o fluxo.",
+    "rules": [
+      "Conta como positivo se o volume de respostas, citacoes e ecos em canais paralelos ultrapassar o patamar observado nos ciclos recentes de debate.",
+      "Mensagens repetidas, brigading evidente ou spam moderado nao entram como engajamento genuino para fechar o mercado.",
+      "Se a moderacao congelar o topico cedo e o assunto perder tracao nas discussoes adjacentes, o lado positivo enfraquece bastante."
+    ],
+    "context": [
+      "A comunidade de codigo aberto passou a tratar burnout como problema de governanca e nao apenas como relato individual, o que aumenta o alcance desse tipo de RFC.",
+      "O radar monitora tanto o volume do topico principal quanto a reverberacao em issues, newsletters e salas privadas de maintainers."
+    ]
+  }
+]

@@ -1,10 +1,14 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { HomeFooter } from "./home-footer";
+
 export function HomeDashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="border-b border-white/6 bg-[color:var(--market-panel)]/88 px-4 py-4 backdrop-blur-xl md:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-[1360px] flex-col gap-4">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+      <div className="texture-grid pointer-events-none absolute inset-0 opacity-25" />
+
+      <div className="relative border-b border-white/6 bg-(--market-panel)/88 px-4 py-4 backdrop-blur-xl md:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-340 flex-col gap-4">
           <div className="flex items-center gap-4">
             <Skeleton className="h-10 w-40 rounded-2xl bg-white/6" />
             <Skeleton className="hidden h-12 flex-1 rounded-2xl bg-white/6 md:block" />
@@ -22,12 +26,12 @@ export function HomeDashboardSkeleton() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-8 px-4 pb-10 pt-6 md:px-6 lg:px-8">
+      <div className="relative mx-auto flex w-full max-w-340 flex-1 flex-col gap-8 px-4 pb-10 pt-6 md:px-6 lg:px-8">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <Skeleton className="h-[520px] rounded-[32px] bg-white/6" />
+          <Skeleton className="h-130 rounded-[32px] bg-white/6" />
           <div className="grid gap-6">
-            <Skeleton className="h-[240px] rounded-[32px] bg-white/6" />
-            <Skeleton className="h-[240px] rounded-[32px] bg-white/6" />
+            <Skeleton className="h-60 rounded-[32px] bg-white/6" />
+            <Skeleton className="h-60 rounded-[32px] bg-white/6" />
           </div>
         </div>
 
@@ -50,12 +54,14 @@ export function HomeDashboardSkeleton() {
             {Array.from({ length: 8 }).map((_, index) => (
               <Skeleton
                 key={index}
-                className="h-[244px] rounded-[28px] bg-white/6"
+                className="h-61 rounded-[28px] bg-white/6"
               />
             ))}
           </div>
         </div>
       </div>
+
+      <HomeFooter />
     </div>
   );
 }
