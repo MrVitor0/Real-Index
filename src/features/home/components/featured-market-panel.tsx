@@ -1,15 +1,12 @@
 import { Bookmark, ChevronLeft, ChevronRight, Link2 } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import type { FeaturedMarket } from "@/features/home/contracts/home-feed";
 import {
   formatProbability,
   formatSignedDelta,
-  getInitials,
   getToneUi,
 } from "@/features/home/lib/presentation";
 
@@ -26,23 +23,29 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
     ) ?? market.outcomes[0];
 
   return (
-    <section className="space-y-4">
-      <Card className="surface-noise overflow-hidden border-white/7 bg-[color:var(--market-surface)]/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
+    <section className="space-y-5">
+      <Card className="code-surface surface-noise overflow-hidden border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
         <CardContent className="p-5 md:p-6 xl:p-7">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-5">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[color:var(--market-positive)]/20 bg-[color:var(--market-positive)]/12 text-sm font-semibold tracking-[0.18em] text-[color:var(--market-positive)] shadow-lg shadow-[color:var(--market-positive)]/8">
                 {market.iconLabel}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
+                <Badge className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-white/62 hover:bg-white/[0.04]">
+                  radar-em-destaque.ts
+                </Badge>
+
                 <div className="flex items-center gap-2 text-sm text-white/48">
                   <span>{market.category}</span>
                   <span>•</span>
                   <span>{market.subCategory}</span>
                 </div>
                 <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-balance text-white md:text-[2.15rem]">
+                  <span className="mr-2 font-mono text-primary/68">&#123;</span>
                   {market.title}
+                  <span className="ml-2 font-mono text-primary/68">&#125;</span>
                 </h1>
               </div>
             </div>
@@ -68,8 +71,8 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
           <div className="mt-8 grid gap-8 xl:grid-cols-[320px_minmax(0,1fr)]">
             <div className="space-y-6">
               <div className="rounded-[28px] border border-white/7 bg-[color:var(--market-panel)]/74 p-5 shadow-xl shadow-black/20">
-                <p className="text-xs font-medium uppercase tracking-[0.24em] text-white/38">
-                  Headline probability
+                <p className="font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-white/38">
+                  probabilidadePrincipal()
                 </p>
                 <div className="mt-4 flex items-end gap-3">
                   <p className="text-5xl font-semibold tracking-tight text-white">
@@ -81,6 +84,11 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
                     {headlineOutcome.label}
                   </Badge>
                 </div>
+                <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.24em] text-white/32">
+                  {'retorna "'}
+                  {headlineOutcome.id}
+                  {'";'}
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -96,9 +104,14 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
                         <span
                           className={`h-2.5 w-2.5 rounded-full ${toneUi.dot}`}
                         />
-                        <span className="text-sm font-medium text-white/82">
-                          {outcome.label}
-                        </span>
+                        <div>
+                          <span className="text-sm font-medium text-white/82">
+                            {outcome.label}
+                          </span>
+                          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/30">
+                            estado::{outcome.id}
+                          </p>
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-semibold tracking-tight text-white">
@@ -113,37 +126,16 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
                 })}
               </div>
 
-              <Separator className="bg-white/8" />
-
-              <div className="space-y-4">
-                {market.comments.map((comment) => {
-                  const toneUi = getToneUi(comment.tone);
-
-                  return (
-                    <div key={comment.id} className="flex items-start gap-3">
-                      <Avatar size="sm" className="ring-1 ring-white/8">
-                        <AvatarFallback
-                          className={`${toneUi.avatar} text-xs font-semibold`}
-                        >
-                          {getInitials(comment.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium text-white/82">
-                          {comment.name}
-                        </p>
-                        <p className="text-sm leading-6 text-white/46">
-                          {comment.message}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="rounded-[24px] border border-white/6 bg-white/[0.03] px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-white/36">
+                    {market.volumeLabel}
+                  </span>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/30">
+                    {market.resolutionLabel}
+                  </span>
+                </div>
               </div>
-
-              <p className="text-sm font-medium text-white/36">
-                {market.volumeLabel}
-              </p>
             </div>
 
             <div className="space-y-5">
@@ -169,6 +161,17 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
               </div>
 
               <div className="rounded-[28px] border border-white/7 bg-[color:var(--market-panel)]/74 p-4 shadow-xl shadow-black/20 md:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/6 pb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-market-negative/80" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-market-warning/80" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-market-positive/80" />
+                  </div>
+                  <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-white/34">
+                    esteira-de-lancamento.tsx
+                  </p>
+                </div>
+
                 <FeaturedMarketChart
                   outcomes={market.outcomes}
                   points={market.chart.points}
@@ -176,9 +179,9 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
                   headlineOutcomeId={market.headlineOutcomeId}
                 />
 
-                <div className="mt-4 flex items-center justify-between gap-3 text-sm text-white/38">
+                <div className="mt-4 flex items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-white/38">
                   <span>{market.resolutionLabel}</span>
-                  <span>REAL Index</span>
+                  <span>real-index.sinal</span>
                 </div>
               </div>
             </div>
@@ -210,9 +213,9 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
             <Button
               key={relatedMarket.id}
               variant="ghost"
-              className="h-11 rounded-full border border-white/8 bg-white/4 px-4 text-sm font-medium text-white/72 hover:bg-white/8 hover:text-white"
+              className="h-11 rounded-full border border-white/8 bg-white/4 px-4 font-mono text-[12px] font-medium uppercase tracking-[0.16em] text-white/72 hover:bg-white/8 hover:text-white"
             >
-              {relatedMarket.label}
+              [{relatedMarket.label}]
             </Button>
           ))}
           <Button

@@ -16,7 +16,7 @@ import { SidebarPanel } from "./sidebar-panel";
 
 export function HomeDashboard() {
   const { data, error, reload, status } = useHomeFeed();
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("Tudo");
   const [searchQuery, setSearchQuery] = useState("");
   const deferredSearch = useDeferredValue(searchQuery);
 
@@ -29,7 +29,7 @@ export function HomeDashboard() {
       <div className="min-h-screen bg-background px-6 py-20 text-foreground">
         <div className="mx-auto flex max-w-xl flex-col items-center gap-4 rounded-[32px] border border-white/7 bg-[color:var(--market-surface)]/94 p-8 text-center shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
           <Badge className="rounded-full border-[color:var(--market-negative)]/20 bg-[color:var(--market-negative)]/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--market-negative)] hover:bg-[color:var(--market-negative)]/12">
-            Home feed unavailable
+            Painel inicial indisponivel
           </Badge>
           <AlertTriangle className="h-10 w-10 text-[color:var(--market-negative)]" />
           <h1 className="text-3xl font-semibold tracking-tight text-white">
@@ -37,7 +37,7 @@ export function HomeDashboard() {
           </h1>
           <p className="text-sm leading-7 text-white/48">
             {error ??
-              "O endpoint interno nao respondeu com um snapshot valido do feed demo."}
+              "O endpoint interno nao respondeu com um estado valido do painel de exemplo."}
           </p>
           <Button onClick={reload} className="rounded-full px-6">
             Tentar novamente
@@ -48,14 +48,16 @@ export function HomeDashboard() {
   }
 
   const { navigation, featuredMarket, sidebar, openMarkets } = data.data;
+  const baseTabLabel = openMarkets.tabs[0]?.label ?? "Tudo";
   const resolvedActiveTab =
     openMarkets.tabs.find((tab) => tab.label === activeTab)?.label ??
     openMarkets.tabs[0]?.label ??
-    "All";
+    baseTabLabel;
   const normalizedSearch = deferredSearch.trim().toLowerCase();
   const filteredMarkets = openMarkets.items.filter((market) => {
     const matchesTab =
-      resolvedActiveTab === "All" || market.tags.includes(resolvedActiveTab);
+      resolvedActiveTab === baseTabLabel ||
+      market.tags.includes(resolvedActiveTab);
     const searchTarget = [
       market.title,
       market.subtitle,
@@ -70,6 +72,28 @@ export function HomeDashboard() {
 
     return matchesTab && matchesSearch;
   });
+  const runtimeSignals = [
+    {
+      label: "painel.itens",
+      value: openMarkets.items.length.toString().padStart(2, "0"),
+      detail: "mercados ativos",
+    },
+    {
+      label: "comunidade.notas",
+      value: featuredMarket.comments.length.toString().padStart(2, "0"),
+      detail: "notas ao vivo",
+    },
+    {
+      label: "sala.alertas",
+      value: sidebar.breakingNews.length.toString().padStart(2, "0"),
+      detail: "alertas abertos",
+    },
+    {
+      label: "acesso.modo",
+      value: data.meta.auth.status === "anonymous" ? "visitante" : "membro",
+      detail: "rota preparada",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -80,10 +104,10 @@ export function HomeDashboard() {
         authStatus={data.meta.auth.status}
       />
 
-      <main className="relative mx-auto flex w-full max-w-[1360px] flex-col gap-8 px-4 pb-10 pt-6 md:px-6 lg:px-8">
+      <main className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-8 px-4 pb-12 pt-6 md:px-6 lg:px-8">
         <div className="texture-grid pointer-events-none absolute inset-x-4 top-0 h-72 opacity-30 md:inset-x-6 lg:inset-x-8" />
 
-        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <FeaturedMarketPanel market={featuredMarket} />
           <SidebarPanel sidebar={sidebar} />
         </div>

@@ -42,9 +42,9 @@ function ChartTooltip({
   }
 
   return (
-    <div className="min-w-44 rounded-2xl border border-white/10 bg-[color:var(--market-panel)]/95 p-3 shadow-2xl shadow-black/35 backdrop-blur-md">
-      <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
-        {label}
+    <div className="code-surface min-w-44 rounded-2xl border border-white/10 bg-market-panel/95 p-3 shadow-2xl shadow-black/35 backdrop-blur-md">
+      <p className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-white/45">
+        ponto::{label}
       </p>
       <div className="space-y-2">
         {outcomes.map((outcome) => {

@@ -16,10 +16,13 @@ type SidebarPanelProps = {
 export function SidebarPanel({ sidebar }: SidebarPanelProps) {
   return (
     <aside className="grid gap-6">
-      <Card className="border-white/7 bg-[color:var(--market-surface)]/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
+      <Card className="code-surface border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
         <CardHeader className="px-5 pt-5">
+          <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-white/32">
+            tail -f ./sala-de-alertas.log
+          </p>
           <CardTitle className="flex items-center justify-between text-xl text-white">
-            <span>{sidebar.breakingTitle}</span>
+            <span>[{sidebar.breakingTitle}]</span>
             <ChevronRight className="h-4 w-4 text-white/36" />
           </CardTitle>
         </CardHeader>
@@ -38,6 +41,9 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
                       {index + 1}
                     </span>
                     <p className="text-sm leading-6 text-white/82">
+                      <span className="mr-2 font-mono text-primary/42">
+                        {"//"}
+                      </span>
                       {item.title}
                     </p>
                   </div>
@@ -56,10 +62,13 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-white/7 bg-[color:var(--market-surface)]/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
+      <Card className="code-surface border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
         <CardHeader className="px-5 pt-5">
+          <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-white/32">
+            ranking ./assuntos-quentes.json
+          </p>
           <CardTitle className="flex items-center justify-between text-xl text-white">
-            <span>{sidebar.hotTopicsTitle}</span>
+            <span>[{sidebar.hotTopicsTitle}]</span>
             <ChevronRight className="h-4 w-4 text-white/36" />
           </CardTitle>
         </CardHeader>
@@ -82,7 +91,9 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-white/46">{topic.valueLabel}</span>
+                    <span className="font-mono text-white/46">
+                      {topic.valueLabel}
+                    </span>
                     <Flame className={`h-4 w-4 ${toneUi.text}`} />
                   </div>
                 </div>
@@ -92,7 +103,7 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
 
           <Button
             variant="outline"
-            className="h-11 w-full rounded-full border-white/8 bg-white/[0.03] text-white hover:bg-white/8 hover:text-white"
+            className="h-11 w-full rounded-full border-white/8 bg-white/[0.03] font-mono text-[11px] uppercase tracking-[0.22em] text-white hover:bg-white/8 hover:text-white"
           >
             {sidebar.exploreLabel}
           </Button>

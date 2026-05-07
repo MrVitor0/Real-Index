@@ -1,78 +1,78 @@
 {
   "brandLabel": "REAL Index",
-  "brandBadge": "BR",
-  "searchPlaceholder": "Search services, incidents or markets...",
+  "brandBadge": "PT-BR",
+  "searchPlaceholder": "Buscar repositorios, lancamentos, incidentes ou drama da comunidade...",
   "topLinks": [
     {
-      "id": "how-it-works",
-      "label": "How it works",
+      "id": "documentacao",
+      "label": "Documentacao",
       "href": "#markets"
     },
     {
-      "id": "log-in",
-      "label": "Log in",
+      "id": "entrar",
+      "label": "Entrar",
       "href": "#auth-preview"
     },
     {
-      "id": "sign-up",
-      "label": "Sign up",
+      "id": "beta",
+      "label": "Entrar na beta",
       "href": "#auth-preview"
     }
   ],
   "categories": [
     {
-      "id": "trending",
-      "label": "Trending",
+      "id": "em-alta",
+      "label": "Em alta",
       "href": "#markets"
     },
     {
-      "id": "breaking",
-      "label": "Breaking",
+      "id": "sala-de-lancamentos",
+      "label": "Sala de lancamentos",
       "href": "#markets"
     },
     {
-      "id": "payments",
-      "label": "Payments",
+      "id": "front-end",
+      "label": "Front-end",
       "href": "#markets"
     },
     {
-      "id": "government",
-      "label": "Government",
+      "id": "codigo-aberto",
+      "label": "Codigo aberto",
       "href": "#markets"
     },
     {
-      "id": "messaging",
-      "label": "Messaging",
+      "id": "agentes-ia",
+      "label": "Agentes IA",
       "href": "#markets"
     },
     {
-      "id": "cloud",
-      "label": "Cloud",
+      "id": "ferramentas",
+      "label": "Ferramentas",
       "href": "#markets"
     },
     {
-      "id": "retail",
-      "label": "Retail",
+      "id": "infra",
+      "label": "Infra",
       "href": "#markets"
     },
     {
-      "id": "weather",
-      "label": "Weather",
+      "id": "seguranca",
+      "label": "Seguranca",
       "href": "#markets"
     },
     {
-      "id": "mentions",
-      "label": "Mentions",
+      "id": "typescript",
+      "label": "TypeScript",
       "href": "#markets"
     },
     {
-      "id": "telecom",
-      "label": "Telecom",
+      "id": "mantenedores",
+      "label": "Mantenedores",
       "href": "#markets"
     },
     {
-      "id": "more",
-      "label": "More",
+      "id": "mais",
+      "label": "Mais",
       "href": "#markets"
     }
   ]

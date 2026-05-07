@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Bookmark,
   Search,
@@ -9,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useHorizontalDragScroll } from "@/features/home/hooks/use-horizontal-drag-scroll";
 import type {
   MarketCard,
   MarketTab,
@@ -28,18 +31,30 @@ type MarketsGridProps = {
 
 function MarketCardItem({ market }: { market: MarketCard }) {
   const toneUi = getToneUi(market.tone);
+  const baseTagLabel = "Tudo";
   const primaryTag =
-    market.tags.find((tag) => tag !== "All") ?? market.tags[0] ?? "Market";
+    market.tags.find((tag) => tag !== baseTagLabel) ??
+    market.tags[0] ??
+    "Mercado";
   const progressWidth = `${Math.max(market.probability, 6)}%`;
+  const marketPath = `observatorio/${market.id}.ts`;
+  const visibleTags = market.tags
+    .filter((tag) => tag !== baseTagLabel)
+    .slice(0, 2);
 
   return (
-    <Card className="group h-full border-white/7 bg-[color:var(--market-surface)]/94 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.95)] transition-all duration-200 hover:-translate-y-1 hover:border-white/12 hover:shadow-[0_30px_85px_-40px_rgba(0,0,0,0.98)]">
+    <Card className="code-surface group h-full border-white/7 bg-market-surface/94 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.95)] transition-all duration-200 hover:-translate-y-1 hover:border-white/12 hover:shadow-[0_30px_85px_-40px_rgba(0,0,0,0.98)]">
       <CardContent className="flex h-full flex-col gap-5 p-5">
         <div className="flex items-start justify-between gap-4">
-          <div
-            className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-sm font-semibold tracking-[0.16em] ${toneUi.soft}`}
-          >
-            {market.iconLabel}
+          <div className="space-y-3">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/30">
+              ~/{marketPath}
+            </p>
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-sm font-semibold tracking-[0.16em] ${toneUi.soft}`}
+            >
+              {market.iconLabel}
+            </div>
           </div>
 
           <div className="text-right">
@@ -54,12 +69,28 @@ function MarketCardItem({ market }: { market: MarketCard }) {
 
         <div className="space-y-2">
           <h3 className="text-base font-semibold leading-6 text-white">
+            <span className="mr-1 font-mono text-primary/64">&lt;</span>
             {market.title}
+            <span className="ml-1 font-mono text-primary/64">/&gt;</span>
           </h3>
           <p className="text-sm text-white/45">{market.subtitle}</p>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            {visibleTags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/8 bg-white/[0.03] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/46"
+              >
+                [{tag}]
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-3">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/30">
+            confianca
+          </p>
           <div className="h-1.5 rounded-full bg-white/6">
             <div
               className={`h-full rounded-full ${toneUi.dot}`}
@@ -80,7 +111,9 @@ function MarketCardItem({ market }: { market: MarketCard }) {
         </div>
 
         <div className="mt-auto flex items-center justify-between gap-3 text-xs text-white/42">
-          <span>{market.volumeLabel}</span>
+          <span className="font-mono uppercase tracking-[0.16em] text-white/38">
+            {market.volumeLabel}
+          </span>
           <div className="flex items-center gap-2">
             {market.direction === "up" ? (
               <TrendingUp className={`h-3.5 w-3.5 ${toneUi.text}`} />
@@ -104,23 +137,32 @@ export function MarketsGrid({
   searchQuery,
   hasActiveSearch,
 }: MarketsGridProps) {
+  const { ref: tabsRef, dragScrollProps: tabsDragScrollProps } =
+    useHorizontalDragScroll<HTMLDivElement>();
+
   return (
-    <section id="markets" className="space-y-5">
+    <section id="markets" className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
+        <div className="space-y-3">
+          <Badge className="rounded-full border-white/10 bg-white/[0.03] px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-white/60 hover:bg-white/[0.03]">
+            painel-da-comunidade.ts
+          </Badge>
           <h2 className="text-3xl font-semibold tracking-tight text-white">
+            <span className="mr-1 font-mono text-primary/64">&lt;</span>
             {title}
+            <span className="ml-1 font-mono text-primary/64">/&gt;</span>
           </h2>
           <p className="mt-2 text-sm text-white/46">
-            UI-first preview servida pelo endpoint interno com dados demo
-            preparados para auth futura.
+            grep -i lancamento ./repos && tail -f radar-da-comunidade.log
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start lg:self-auto">
           {hasActiveSearch ? (
             <Badge className="rounded-full border-white/8 bg-white/[0.05] px-3 py-1 text-xs font-medium text-white/72 hover:bg-white/[0.05]">
-              Filtered by “{searchQuery}”
+              {'Filtrado por "'}
+              {searchQuery}
+              {'"'}
             </Badge>
           ) : null}
           <Button
@@ -147,7 +189,11 @@ export function MarketsGrid({
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div
+        ref={tabsRef}
+        className="scrollbar-hidden flex gap-2 overflow-x-auto pb-2 select-none"
+        {...tabsDragScrollProps}
+      >
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -160,7 +206,9 @@ export function MarketsGrid({
                 : "border-white/8 bg-white/[0.03] text-white/56 hover:bg-white/[0.06] hover:text-white",
             )}
           >
+            <span className="font-mono text-[11px] text-white/34">[</span>
             {tab.label}
+            <span className="font-mono text-[11px] text-white/34">]</span>
           </button>
         ))}
       </div>
@@ -172,14 +220,14 @@ export function MarketsGrid({
           ))}
         </div>
       ) : (
-        <Card className="border-white/7 bg-[color:var(--market-surface)]/94">
+        <Card className="code-surface border-white/7 bg-market-surface/94">
           <CardContent className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
             <p className="text-lg font-semibold text-white">
-              No demo markets matched this filter.
+              grep retornou 0 linhas.
             </p>
             <p className="max-w-xl text-sm leading-6 text-white/46">
-              Tente outro termo de busca ou volte para a aba All para
-              inspecionar o snapshot completo do feed demo.
+              Tente outra busca ou volte para [Tudo] para inspecionar o recorte
+              completo da comunidade dev.
             </p>
           </CardContent>
         </Card>

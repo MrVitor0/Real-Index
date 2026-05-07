@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { CircleHelp, Menu, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useHorizontalDragScroll } from "@/features/home/hooks/use-horizontal-drag-scroll";
 import { cn } from "@/lib/utils";
 import type { HomeNavigation } from "@/features/home/contracts/home-feed";
 
@@ -20,32 +23,44 @@ export function DashboardHeader({
   onSearchQueryChange,
   authStatus,
 }: DashboardHeaderProps) {
+  const { ref: categoriesRef, dragScrollProps: categoriesDragScrollProps } =
+    useHorizontalDragScroll<HTMLElement>();
+
   return (
-    <header className="sticky top-0 z-40 border-b border-white/6 bg-[color:var(--market-panel)]/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-4 px-4 py-4 md:px-6 lg:px-8">
+    <header className="surface-noise sticky top-0 z-40 border-b border-white/6 bg-market-panel/90 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-4 py-4 md:px-6 lg:px-8">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 rounded-2xl">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-primary/12 text-sm font-semibold text-primary shadow-lg shadow-primary/10">
                 RI
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-semibold tracking-tight text-white">
-                  {navigation.brandLabel}
-                </span>
-                <Badge className="rounded-full border-white/10 bg-white/6 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-white/70 hover:bg-white/6">
-                  {navigation.brandBadge}
-                </Badge>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs uppercase tracking-[0.24em] text-primary/68">
+                    &lt;
+                  </span>
+                  <span className="text-xl font-semibold tracking-tight text-white">
+                    {navigation.brandLabel}
+                  </span>
+                  <span className="font-mono text-xs uppercase tracking-[0.24em] text-primary/68">
+                    /&gt;
+                  </span>
+                  <Badge className="rounded-full border-white/10 bg-white/6 px-2.5 py-1 font-mono text-[11px] font-semibold tracking-[0.18em] text-white/70 hover:bg-white/6">
+                    {navigation.brandBadge}
+                  </Badge>
+                </div>
+                <p className="hidden font-mono text-[11px] uppercase tracking-[0.18em] text-white/30 sm:block">
+                  radar da comunidade // sala de lancamentos // pulso dev
+                </p>
               </div>
             </Link>
 
             <Badge
               id="auth-preview"
-              className="hidden rounded-full border-[color:var(--market-warning)]/20 bg-[color:var(--market-warning)]/12 px-3 py-1 text-[11px] font-medium text-[color:var(--market-warning)] lg:inline-flex"
+              className="hidden rounded-full border border-market-warning/20 bg-market-warning/12 px-3 py-1 font-mono text-[11px] font-medium text-market-warning lg:inline-flex"
             >
-              {authStatus === "anonymous"
-                ? "Anonymous preview"
-                : "Authenticated"}
+              {authStatus === "anonymous" ? "modo leitura" : "sessao ativa"}
             </Badge>
           </div>
 
@@ -64,7 +79,7 @@ export function DashboardHeader({
 
           <div className="flex items-center gap-2 self-end lg:self-auto">
             {navigation.topLinks.map((link) => {
-              if (link.id === "sign-up") {
+              if (link.id === "beta") {
                 return (
                   <a
                     key={link.id}
@@ -84,12 +99,12 @@ export function DashboardHeader({
                   key={link.id}
                   href={link.href}
                   className={cn(
-                    "inline-flex h-10 items-center gap-2 rounded-2xl px-3 text-sm font-medium text-white/76 transition-colors hover:bg-white/6 hover:text-white",
-                    link.id === "how-it-works" &&
-                      "hidden text-[color:var(--market-info)] hover:text-[color:var(--market-info)] sm:inline-flex",
+                    "inline-flex h-10 items-center gap-2 rounded-2xl border border-transparent px-3 text-sm font-medium text-white/76 transition-colors hover:border-white/8 hover:bg-white/6 hover:text-white",
+                    link.id === "documentacao" &&
+                      "hidden text-market-info hover:text-market-info sm:inline-flex",
                   )}
                 >
-                  {link.id === "how-it-works" ? (
+                  {link.id === "documentacao" ? (
                     <CircleHelp className="h-4 w-4" />
                   ) : null}
                   {link.label}
@@ -107,17 +122,28 @@ export function DashboardHeader({
           </div>
         </div>
 
-        <nav className="flex items-center gap-4 overflow-x-auto pb-1">
+        <nav
+          ref={categoriesRef}
+          className="scrollbar-hidden flex items-center gap-2 overflow-x-auto pb-1 select-none"
+          {...categoriesDragScrollProps}
+        >
+          <span className="shrink-0 pr-2 font-mono text-[11px] uppercase tracking-[0.28em] text-white/28">
+            ~/canais
+          </span>
           {navigation.categories.map((category, index) => (
             <a
               key={category.id}
               href={category.href}
               className={cn(
-                "shrink-0 text-sm font-medium text-white/45 transition-colors hover:text-white",
-                index === 0 && "text-white",
+                "inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                index === 0
+                  ? "border-primary/25 bg-primary/10 text-primary"
+                  : "border-white/6 bg-white/[0.02] text-white/52 hover:bg-white/[0.05] hover:text-white",
               )}
             >
+              <span className="font-mono text-[11px] text-white/34">[</span>
               {category.label}
+              <span className="font-mono text-[11px] text-white/34">]</span>
             </a>
           ))}
         </nav>

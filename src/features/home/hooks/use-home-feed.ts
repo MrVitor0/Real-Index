@@ -24,7 +24,7 @@ async function fetchHomeFeed(signal: AbortSignal) {
   });
 
   if (!response.ok) {
-    throw new Error("Nao foi possivel carregar a home do sistema.");
+    throw new Error("Nao foi possivel carregar o painel inicial do sistema.");
   }
 
   const payload = await response.json();
@@ -70,7 +70,7 @@ export function useHomeFeed() {
         error:
           error instanceof Error
             ? error.message
-            : "Nao foi possivel carregar a home do sistema.",
+            : "Nao foi possivel carregar o painel inicial do sistema.",
       }));
     }
   });
