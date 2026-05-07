@@ -1,0 +1,79 @@
+{
+  "brandLabel": "REAL Index",
+  "brandBadge": "BR",
+  "searchPlaceholder": "Search services, incidents or markets...",
+  "topLinks": [
+    {
+      "id": "how-it-works",
+      "label": "How it works",
+      "href": "#markets"
+    },
+    {
+      "id": "log-in",
+      "label": "Log in",
+      "href": "#auth-preview"
+    },
+    {
+      "id": "sign-up",
+      "label": "Sign up",
+      "href": "#auth-preview"
+    }
+  ],
+  "categories": [
+    {
+      "id": "trending",
+      "label": "Trending",
+      "href": "#markets"
+    },
+    {
+      "id": "breaking",
+      "label": "Breaking",
+      "href": "#markets"
+    },
+    {
+      "id": "payments",
+      "label": "Payments",
+      "href": "#markets"
+    },
+    {
+      "id": "government",
+      "label": "Government",
+      "href": "#markets"
+    },
+    {
+      "id": "messaging",
+      "label": "Messaging",
+      "href": "#markets"
+    },
+    {
+      "id": "cloud",
+      "label": "Cloud",
+      "href": "#markets"
+    },
+    {
+      "id": "retail",
+      "label": "Retail",
+      "href": "#markets"
+    },
+    {
+      "id": "weather",
+      "label": "Weather",
+      "href": "#markets"
+    },
+    {
+      "id": "mentions",
+      "label": "Mentions",
+      "href": "#markets"
+    },
+    {
+      "id": "telecom",
+      "label": "Telecom",
+      "href": "#markets"
+    },
+    {
+      "id": "more",
+      "label": "More",
+      "href": "#markets"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "title": "All markets",
+  "tabs": [
+    {
+      "id": "all",
+      "label": "All"
+    },
+    {
+      "id": "payments",
+      "label": "Payments"
+    },
+    {
+      "id": "government",
+      "label": "Government"
+    },
+    {
+      "id": "messaging",
+      "label": "Messaging"
+    },
+    {
+      "id": "cloud",
+      "label": "Cloud"
+    },
+    {
+      "id": "retail",
+      "label": "Retail"
+    },
+    {
+      "id": "weather",
+      "label": "Weather"
+    },
+    {
+      "id": "Telecom",
+      "label": "Telecom"
+    }
+  ],
+  "items": [
+    {
+      "id": "caixa-recovery",
+      "title": "Will Caixa app recover before 09:00 BRT tomorrow?",
+      "subtitle": "June 30",
+      "probability": 76,
+      "volumeLabel": "$95M Vol",
+      "movementLabel": "↗ 12% today",
+      "direction": "up",
+      "tone": "mint",
+      "iconLabel": "CX",
+      "tags": ["All", "Payments"],
+      "yesPriceLabel": "Yes",
+      "noPriceLabel": "No"
+    },
+    {
+      "id": "aws-stable",
+      "title": "Will AWS sa-east-1 stay out of orange status this week?",
+      "subtitle": "This week",
+      "probability": 69,
+      "volumeLabel": "$61M Vol",
+      "movementLabel": "↗ 7% today",
+      "direction": "up",
+      "tone": "sky",
+      "iconLabel": "AWS",
+      "tags": ["All", "Cloud"],
+      "yesPriceLabel": "Yes",
+      "noPriceLabel": "No"
+    },
+    {
+      "id": "govbr-login-rate",
+      "title": "Will Gov.br maintain 97%+ successful logins on Monday morning?",
+      "subtitle": "Monday 09:00",
+      "probability": 63,
+      "volumeLabel": "$44M Vol",
+      "movementLabel": "↗ 4% today",
+      "direction": "up",
+      "tone": "primary",
+      "iconLabel": "GB",
+      "tags": ["All", "Government"],
+      "yesPriceLabel": "Yes",
+      "noPriceLabel": "No"
+    },
+    {
+      "id": "whatsapp-alert",
+      "title": "Will WhatsApp avoid a BR-wide degradation alert this weekend?",
+      "subtitle": "This weekend",
+      "probability": 84,
+      "volumeLabel": "$88M Vol",
+      "movementLabel": "↗ 16% today",
+      "direction": "up",
+      "tone": "mint",
+      "iconLabel": "WA",
+      "tags": ["All", "Messaging"],
+      "yesPriceLabel": "Yes",
+      "noPriceLabel": "No"
+    },
+    {
+      "id": "meli-checkout",
+      "title": "Will Mercado Livre checkout errors drop below 0.4% after deploy?",
+      "subtitle": "Tonight 23:00",
+      "probability": 58,
+      "volumeLabel": "$37M Vol",
+      "movementLabel": "↗ 6% today",
+      "direction": "up",
+      "tone": "gold",
+      "iconLabel": "ML",
+      "tags": ["All", "Retail"],
+      "yesPriceLabel": "Yes",
+      "noPriceLabel": "No"
+    },
+    {
+      "id": "sao-paulo-rain",
+      "title": "Will heavy rain in Sao Paulo trigger a regional telecom incident tomorrow?",
+      "subtitle": "Tomorrow 18:00",
+      "probability": 44,
+      "volumeLabel": "$23M Vol",
+      "movementLabel": "↘ 3% today",
+      "direction": "down",
+      "tone": "coral",
+      "iconLabel": "SP",
+      "tags": ["All", "Weather", "Telecom"],
+      "yesPriceLabel": "Yes",
+      "noPriceLabel": "No"
+    },
+    {
+      "id": "carrier-peak-4g",
+      "title": "Will a national carrier report 4G instability during peak commute?",
+      "subtitle": "Tomorrow 20:00",
+      "probability": 37,
+      "volumeLabel": "$29M Vol",
+      "movementLabel": "↘ 5% today",
+      "direction": "down",
+      "tone": "coral",
+      "iconLabel": "4G",
+      "tags": ["All", "Telecom"],
+      "yesPriceLabel": "Yes",
+      "noPriceLabel": "No"
+    },
+    {
+      "id": "receita-portal-queue",
+      "title": "Will Receita filing portal queues exceed 20 minutes on Tuesday?",
+      "subtitle": "Tuesday 11:00",
+      "probability": 47,
+      "volumeLabel": "$31M Vol",
+      "movementLabel": "↗ 9% today",
+      "direction": "up",
+      "tone": "gold",
+      "iconLabel": "RF",
+      "tags": ["All", "Government"],
+      "yesPriceLabel": "Yes",
+      "noPriceLabel": "No"
+    }
+  ]
+}

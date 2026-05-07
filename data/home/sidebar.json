@@ -1,0 +1,60 @@
+{
+  "breakingTitle": "Breaking news",
+  "hotTopicsTitle": "Hot topics",
+  "exploreLabel": "Explore all",
+  "breakingNews": [
+    {
+      "id": "govbr-queues",
+      "title": "Will Gov.br login queues remain below 5 minutes tomorrow morning?",
+      "probability": 88,
+      "delta": 49,
+      "tone": "mint"
+    },
+    {
+      "id": "nubank-availability",
+      "title": "Will Nubank maintain full Pix availability through Sunday night?",
+      "probability": 99,
+      "delta": 43,
+      "tone": "sky"
+    },
+    {
+      "id": "receita-degradation",
+      "title": "Will Receita Federal authentication degrade before the filing deadline?",
+      "probability": 57,
+      "delta": 29,
+      "tone": "gold"
+    }
+  ],
+  "hotTopics": [
+    {
+      "id": "pix",
+      "label": "Pix",
+      "valueLabel": "$829K today",
+      "tone": "coral"
+    },
+    {
+      "id": "govbr",
+      "label": "Gov.br",
+      "valueLabel": "$97.7K today",
+      "tone": "gold"
+    },
+    {
+      "id": "whatsapp",
+      "label": "WhatsApp",
+      "valueLabel": "$1M today",
+      "tone": "mint"
+    },
+    {
+      "id": "caixa",
+      "label": "Caixa",
+      "valueLabel": "$1.4K today",
+      "tone": "sky"
+    },
+    {
+      "id": "anatel",
+      "label": "Anatel",
+      "valueLabel": "$87.8K today",
+      "tone": "primary"
+    }
+  ]
+}

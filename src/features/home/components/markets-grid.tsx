@@ -1,0 +1,189 @@
+import {
+  Bookmark,
+  Search,
+  SlidersHorizontal,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import type {
+  MarketCard,
+  MarketTab,
+} from "@/features/home/contracts/home-feed";
+import { formatProbability, getToneUi } from "@/features/home/lib/presentation";
+import { cn } from "@/lib/utils";
+
+type MarketsGridProps = {
+  title: string;
+  tabs: MarketTab[];
+  markets: MarketCard[];
+  activeTab: string;
+  onTabChange: (nextTab: string) => void;
+  searchQuery: string;
+  hasActiveSearch: boolean;
+};
+
+function MarketCardItem({ market }: { market: MarketCard }) {
+  const toneUi = getToneUi(market.tone);
+  const primaryTag =
+    market.tags.find((tag) => tag !== "All") ?? market.tags[0] ?? "Market";
+  const progressWidth = `${Math.max(market.probability, 6)}%`;
+
+  return (
+    <Card className="group h-full border-white/7 bg-[color:var(--market-surface)]/94 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.95)] transition-all duration-200 hover:-translate-y-1 hover:border-white/12 hover:shadow-[0_30px_85px_-40px_rgba(0,0,0,0.98)]">
+      <CardContent className="flex h-full flex-col gap-5 p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-sm font-semibold tracking-[0.16em] ${toneUi.soft}`}
+          >
+            {market.iconLabel}
+          </div>
+
+          <div className="text-right">
+            <p className="text-2xl font-semibold tracking-tight text-white">
+              {formatProbability(market.probability)}
+            </p>
+            <p className={`text-xs font-medium ${toneUi.text}`}>
+              {market.movementLabel}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-base font-semibold leading-6 text-white">
+            {market.title}
+          </h3>
+          <p className="text-sm text-white/45">{market.subtitle}</p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="h-1.5 rounded-full bg-white/6">
+            <div
+              className={`h-full rounded-full ${toneUi.dot}`}
+              style={{ width: progressWidth }}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div
+              className={`rounded-2xl border px-3 py-2 text-center text-sm font-medium ${toneUi.soft}`}
+            >
+              {market.yesPriceLabel}
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2 text-center text-sm font-medium text-white/76">
+              {market.noPriceLabel}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-3 text-xs text-white/42">
+          <span>{market.volumeLabel}</span>
+          <div className="flex items-center gap-2">
+            {market.direction === "up" ? (
+              <TrendingUp className={`h-3.5 w-3.5 ${toneUi.text}`} />
+            ) : market.direction === "down" ? (
+              <TrendingDown className={`h-3.5 w-3.5 ${toneUi.text}`} />
+            ) : null}
+            <span>{primaryTag}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function MarketsGrid({
+  title,
+  tabs,
+  markets,
+  activeTab,
+  onTabChange,
+  searchQuery,
+  hasActiveSearch,
+}: MarketsGridProps) {
+  return (
+    <section id="markets" className="space-y-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 className="text-3xl font-semibold tracking-tight text-white">
+            {title}
+          </h2>
+          <p className="mt-2 text-sm text-white/46">
+            UI-first preview servida pelo endpoint interno com dados demo
+            preparados para auth futura.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-start lg:self-auto">
+          {hasActiveSearch ? (
+            <Badge className="rounded-full border-white/8 bg-white/[0.05] px-3 py-1 text-xs font-medium text-white/72 hover:bg-white/[0.05]">
+              Filtered by “{searchQuery}”
+            </Badge>
+          ) : null}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-2xl border border-white/8 bg-white/[0.03] text-white/72 hover:bg-white/8 hover:text-white"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-2xl border border-white/8 bg-white/[0.03] text-white/72 hover:bg-white/8 hover:text-white"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-2xl border border-white/8 bg-white/[0.03] text-white/72 hover:bg-white/8 hover:text-white"
+          >
+            <Bookmark className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onTabChange(tab.label)}
+            className={cn(
+              "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+              activeTab === tab.label
+                ? "border-primary/30 bg-primary/15 text-primary"
+                : "border-white/8 bg-white/[0.03] text-white/56 hover:bg-white/[0.06] hover:text-white",
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {markets.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {markets.map((market) => (
+            <MarketCardItem key={market.id} market={market} />
+          ))}
+        </div>
+      ) : (
+        <Card className="border-white/7 bg-[color:var(--market-surface)]/94">
+          <CardContent className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
+            <p className="text-lg font-semibold text-white">
+              No demo markets matched this filter.
+            </p>
+            <p className="max-w-xl text-sm leading-6 text-white/46">
+              Tente outro termo de busca ou volte para a aba All para
+              inspecionar o snapshot completo do feed demo.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </section>
+  );
+}

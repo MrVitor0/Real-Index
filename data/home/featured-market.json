@@ -1,0 +1,144 @@
+{
+  "id": "pix-mothers-day-stability",
+  "title": "Will Pix stay stable through Mother's Day weekend?",
+  "category": "Finance",
+  "subCategory": "Payments",
+  "iconLabel": "PIX",
+  "headlineOutcomeId": "stable",
+  "volumeLabel": "$253M Vol",
+  "resolutionLabel": "Ends May 12, 2026",
+  "outcomes": [
+    {
+      "id": "stable",
+      "label": "Stable",
+      "probability": 57,
+      "change": 29,
+      "tone": "mint"
+    },
+    {
+      "id": "intermittent",
+      "label": "Intermittent",
+      "probability": 30,
+      "change": 12,
+      "tone": "sky"
+    },
+    {
+      "id": "incident",
+      "label": "Major incident",
+      "probability": 13,
+      "change": -6,
+      "tone": "gold"
+    }
+  ],
+  "comments": [
+    {
+      "id": "signalwatch",
+      "name": "signalwatch",
+      "message": "Banking APIs are showing healthy latency right now.",
+      "tone": "primary"
+    },
+    {
+      "id": "headshot",
+      "name": "headshot",
+      "message": "Merchant retries jumped after 19:00 BRT yesterday.",
+      "tone": "coral"
+    },
+    {
+      "id": "superficial-usher",
+      "name": "superficial usher",
+      "message": "SP and RJ traffic are calm, northeast still deserves attention.",
+      "tone": "gold"
+    },
+    {
+      "id": "rainbowlilies",
+      "name": "rainbowlilies",
+      "message": "Consumer chatter cooled off after the last settlement wave.",
+      "tone": "sky"
+    }
+  ],
+  "chart": {
+    "yAxisTicks": [0, 15, 30, 45, 60],
+    "points": [
+      {
+        "label": "Apr 12",
+        "stable": 18,
+        "intermittent": 11,
+        "incident": 5
+      },
+      {
+        "label": "Apr 15",
+        "stable": 24,
+        "intermittent": 16,
+        "incident": 6
+      },
+      {
+        "label": "Apr 18",
+        "stable": 27,
+        "intermittent": 18,
+        "incident": 5
+      },
+      {
+        "label": "Apr 21",
+        "stable": 29,
+        "intermittent": 21,
+        "incident": 4
+      },
+      {
+        "label": "Apr 24",
+        "stable": 29,
+        "intermittent": 24,
+        "incident": 5
+      },
+      {
+        "label": "Apr 27",
+        "stable": 28,
+        "intermittent": 27,
+        "incident": 4
+      },
+      {
+        "label": "Apr 30",
+        "stable": 34,
+        "intermittent": 22,
+        "incident": 4
+      },
+      {
+        "label": "May 02",
+        "stable": 31,
+        "intermittent": 29,
+        "incident": 5
+      },
+      {
+        "label": "May 04",
+        "stable": 33,
+        "intermittent": 27,
+        "incident": 6
+      },
+      {
+        "label": "May 06",
+        "stable": 35,
+        "intermittent": 29,
+        "incident": 4
+      },
+      {
+        "label": "Now",
+        "stable": 57,
+        "intermittent": 30,
+        "incident": 13
+      }
+    ]
+  },
+  "relatedMarkets": [
+    {
+      "id": "merchant-queue",
+      "label": "Merchant queue"
+    },
+    {
+      "id": "banking-apis",
+      "label": "Banking APIs"
+    },
+    {
+      "id": "govbr-spillover",
+      "label": "Gov.br spillover"
+    }
+  ]
+}

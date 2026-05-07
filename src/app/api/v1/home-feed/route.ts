@@ -1,0 +1,45 @@
+import { NextResponse } from "next/server";
+
+import { homeFeedResponseSchema } from "@/features/home/contracts/home-feed";
+import { createRouteContext } from "@/server/api/route-context";
+import { getHomeFeedData } from "@/server/demo-data/home-feed";
+
+export async function GET(request: Request) {
+  const context = createRouteContext(request);
+
+  try {
+    const data = await getHomeFeedData();
+
+    const responseBody = homeFeedResponseSchema.parse({
+      meta: {
+        requestId: context.requestId,
+        generatedAt: new Date().toISOString(),
+        auth: context.auth,
+      },
+      data,
+    });
+
+    return NextResponse.json(responseBody, {
+      headers: {
+        "Cache-Control": "no-store",
+        "x-request-id": context.requestId,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to build home feed", error);
+
+    return NextResponse.json(
+      {
+        error: "Failed to load home feed",
+        requestId: context.requestId,
+      },
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store",
+          "x-request-id": context.requestId,
+        },
+      },
+    );
+  }
+}
