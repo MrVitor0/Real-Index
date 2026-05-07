@@ -53,6 +53,13 @@ Open source and security context:
 - Follow LGPD principles and related privacy regulations. That includes data minimization, purpose limitation, access control, secure handling, and avoiding unnecessary retention or disclosure of personal data.
 - When proposing telemetry, analytics, logging, debugging helpers, or sample payloads, ensure they do not leak personal data, tokens, session identifiers, or confidential business information.
 - Prefer secure defaults, explicit validation, and defensive handling for any external input, uploaded file, JSON payload, query parameter, header, cookie, or integration response.
+- Whenever working on backend surfaces such as Route Handlers, Server Actions, APIs, auth flows, forms, uploads, or webhooks, default to an abuse-resistant structure instead of treating protection as optional follow-up work.
+- Always design simple but functional backend protections for public or user-triggered endpoints: per-IP and per-identity rate limits, route-specific thresholds, and separate burst versus sustained limits when relevant.
+- Include temporary IP blocking or denylisting paths for repeated abuse, credential stuffing, scraping, or spam patterns. Keep this behind a clear service or adapter so the storage/provider can evolve without rewriting the endpoint logic.
+- Add anti-spam protections appropriate to the surface: honeypots, cooldowns, deduplication, resend throttling, server-side validation, and challenge hooks such as CAPTCHA or equivalent escalation points when abuse risk is high.
+- Prefer centralized guards, middleware, or dedicated abuse-prevention services over scattered ad hoc checks. Keep the happy path simple, but make the protection path explicit and hard to bypass.
+- Log security-relevant events with privacy-safe metadata so abusive behavior can be monitored and blocked without leaking sensitive user data. Avoid noisy logging and avoid storing raw sensitive payloads unless strictly necessary.
+- For risky mutations or externally costly actions, prefer safe failure modes. Do not silently disable protections because an abuse-control dependency is missing or degraded; fall back to conservative throttling or explicit rejection when appropriate.
 - If a proposed change could create legal, privacy, or security risk, call that out clearly and choose the safer implementation path.
 
 When responding or implementing:
