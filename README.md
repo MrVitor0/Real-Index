@@ -36,3 +36,5 @@
 ## Mission
 
 The Brazilian dev community must unite to preserve national technological stability against the operational risk posed by @acgfbr 🇧🇷⚠️
+
+- ps: Video do lucas montano pra motivar vocês a codar: https://www.youtube.com/watch?v=T9V7EyB_B9w
