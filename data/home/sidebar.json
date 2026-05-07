@@ -5,21 +5,21 @@
   "breakingNews": [
     {
       "id": "fila-do-canario-next",
-      "title": "A fila de relatos do canario do Next.js vai ficar abaixo de 30 alertas quentes depois da liberacao de hoje?",
+      "title": "Canario do Next.js fica abaixo de 30 alertas apos a liberacao de hoje?",
       "probability": 91,
       "delta": 36,
       "tone": "mint"
     },
     {
       "id": "correcao-de-seguranca-npm",
-      "title": "O time de seguranca do npm vai enviar a correcao da rotacao de token antes dos mantenedores da Europa acordarem?",
+      "title": "npm envia a correcao de rotacao de token antes da manha na Europa?",
       "probability": 72,
       "delta": 21,
       "tone": "sky"
     },
     {
       "id": "inferencia-rc-typescript",
-      "title": "A inferencia do RC do TypeScript vai ficar estavel na onda de repositorios com agentes publicados hoje a noite?",
+      "title": "RC do TypeScript segura a inferencia na onda de repos com agentes?",
       "probability": 58,
       "delta": 17,
       "tone": "gold"
@@ -29,32 +29,20 @@
     {
       "id": "nextjs",
       "label": "Next.js",
-      "valueLabel": "12,4 mil mencoes",
+      "valueLabel": "12,4K mencoes",
       "tone": "primary"
     },
     {
       "id": "shadcn",
       "label": "shadcn/ui",
-      "valueLabel": "8,1 mil trechos",
+      "valueLabel": "8,1K trechos",
       "tone": "mint"
     },
     {
       "id": "typescript",
       "label": "TypeScript",
-      "valueLabel": "10,9 mil comentarios",
+      "valueLabel": "10,9K trechos",
       "tone": "sky"
-    },
-    {
-      "id": "agentes-ia-de-codigo",
-      "label": "Agentes IA de codigo",
-      "valueLabel": "14,2 mil opinioes",
-      "tone": "coral"
-    },
-    {
-      "id": "bun",
-      "label": "Bun",
-      "valueLabel": "5,4 mil comparativos",
-      "tone": "gold"
     }
   ]
 }

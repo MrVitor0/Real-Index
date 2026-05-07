@@ -37,24 +37,20 @@ function MarketCardItem({ market }: { market: MarketCard }) {
     market.tags[0] ??
     "Mercado";
   const progressWidth = `${Math.max(market.probability, 6)}%`;
-  const marketPath = `observatorio/${market.id}.ts`;
-  const visibleTags = market.tags
-    .filter((tag) => tag !== baseTagLabel)
-    .slice(0, 2);
 
   return (
     <Card className="code-surface group h-full border-white/7 bg-market-surface/94 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.95)] transition-all duration-200 hover:-translate-y-1 hover:border-white/12 hover:shadow-[0_30px_85px_-40px_rgba(0,0,0,0.98)]">
-      <CardContent className="flex h-full flex-col gap-5 p-5">
+      <CardContent className="flex h-full flex-col gap-4 p-4">
         <div className="flex items-start justify-between gap-4">
-          <div className="space-y-3">
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/30">
-              ~/{marketPath}
-            </p>
+          <div className="flex items-center gap-3">
             <div
-              className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-sm font-semibold tracking-[0.16em] ${toneUi.soft}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-2xl border text-sm font-semibold tracking-[0.16em] ${toneUi.soft}`}
             >
               {market.iconLabel}
             </div>
+            <span className="rounded-full border border-white/8 bg-white/[0.03] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/46">
+              [{primaryTag}]
+            </span>
           </div>
 
           <div className="text-right">
@@ -69,28 +65,12 @@ function MarketCardItem({ market }: { market: MarketCard }) {
 
         <div className="space-y-2">
           <h3 className="text-base font-semibold leading-6 text-white">
-            <span className="mr-1 font-mono text-primary/64">&lt;</span>
             {market.title}
-            <span className="ml-1 font-mono text-primary/64">/&gt;</span>
           </h3>
           <p className="text-sm text-white/45">{market.subtitle}</p>
-
-          <div className="flex flex-wrap gap-2 pt-1">
-            {visibleTags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-white/8 bg-white/[0.03] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/46"
-              >
-                [{tag}]
-              </span>
-            ))}
-          </div>
         </div>
 
-        <div className="space-y-3">
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/30">
-            confianca
-          </p>
+        <div className="space-y-2.5">
           <div className="h-1.5 rounded-full bg-white/6">
             <div
               className={`h-full rounded-full ${toneUi.dot}`}
@@ -141,20 +121,12 @@ export function MarketsGrid({
     useHorizontalDragScroll<HTMLDivElement>();
 
   return (
-    <section id="markets" className="space-y-6">
+    <section id="markets" className="space-y-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-3">
-          <Badge className="rounded-full border-white/10 bg-white/[0.03] px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-white/60 hover:bg-white/[0.03]">
-            painel-da-comunidade.ts
-          </Badge>
+        <div>
           <h2 className="text-3xl font-semibold tracking-tight text-white">
-            <span className="mr-1 font-mono text-primary/64">&lt;</span>
             {title}
-            <span className="ml-1 font-mono text-primary/64">/&gt;</span>
           </h2>
-          <p className="mt-2 text-sm text-white/46">
-            grep -i lancamento ./repos && tail -f radar-da-comunidade.log
-          </p>
         </div>
 
         <div className="flex items-center gap-2 self-start lg:self-auto">
@@ -191,7 +163,7 @@ export function MarketsGrid({
 
       <div
         ref={tabsRef}
-        className="scrollbar-hidden flex gap-2 overflow-x-auto pb-2 select-none"
+        className="scrollbar-hidden flex gap-2 overflow-x-auto pb-1 select-none"
         {...tabsDragScrollProps}
       >
         {tabs.map((tab) => (
@@ -200,7 +172,7 @@ export function MarketsGrid({
             type="button"
             onClick={() => onTabChange(tab.label)}
             className={cn(
-              "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+              "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
               activeTab === tab.label
                 ? "border-primary/30 bg-primary/15 text-primary"
                 : "border-white/8 bg-white/[0.03] text-white/56 hover:bg-white/[0.06] hover:text-white",
@@ -214,7 +186,7 @@ export function MarketsGrid({
       </div>
 
       {markets.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {markets.map((market) => (
             <MarketCardItem key={market.id} market={market} />
           ))}

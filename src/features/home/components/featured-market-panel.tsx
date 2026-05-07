@@ -1,4 +1,4 @@
-import { Bookmark, ChevronLeft, ChevronRight, Link2 } from "lucide-react";
+import { Bookmark, Link2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,31 +21,32 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
     market.outcomes.find(
       (outcome) => outcome.id === market.headlineOutcomeId,
     ) ?? market.outcomes[0];
+  const contrastingOutcome =
+    market.outcomes[market.outcomes.length - 1] ?? market.outcomes[1];
+  const voteOptions = [headlineOutcome, contrastingOutcome].filter(
+    (outcome, index, outcomes) =>
+      outcome &&
+      outcomes.findIndex((item) => item?.id === outcome.id) === index,
+  );
 
   return (
-    <section className="space-y-5">
-      <Card className="code-surface surface-noise overflow-hidden border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
-        <CardContent className="p-5 md:p-6 xl:p-7">
-          <div className="flex flex-wrap items-start justify-between gap-5">
+    <section className="h-full">
+      <Card className="code-surface surface-noise h-full overflow-hidden border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
+        <CardContent className="flex h-full flex-col p-4 md:p-4 xl:p-4.5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[color:var(--market-positive)]/20 bg-[color:var(--market-positive)]/12 text-sm font-semibold tracking-[0.18em] text-[color:var(--market-positive)] shadow-lg shadow-[color:var(--market-positive)]/8">
                 {market.iconLabel}
               </div>
 
-              <div className="space-y-3">
-                <Badge className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-white/62 hover:bg-white/[0.04]">
-                  radar-em-destaque.ts
-                </Badge>
-
+              <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-white/48">
                   <span>{market.category}</span>
                   <span>•</span>
                   <span>{market.subCategory}</span>
                 </div>
-                <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-balance text-white md:text-[2.15rem]">
-                  <span className="mr-2 font-mono text-primary/68">&#123;</span>
+                <h1 className="max-w-3xl text-[1.72rem] font-semibold leading-tight tracking-tight text-balance text-white md:text-[1.95rem]">
                   {market.title}
-                  <span className="ml-2 font-mono text-primary/68">&#125;</span>
                 </h1>
               </div>
             </div>
@@ -68,78 +69,90 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-8 xl:grid-cols-[320px_minmax(0,1fr)]">
-            <div className="space-y-6">
-              <div className="rounded-[28px] border border-white/7 bg-[color:var(--market-panel)]/74 p-5 shadow-xl shadow-black/20">
-                <p className="font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-white/38">
-                  probabilidadePrincipal()
-                </p>
-                <div className="mt-4 flex items-end gap-3">
-                  <p className="text-5xl font-semibold tracking-tight text-white">
-                    {formatProbability(headlineOutcome.probability)}
-                  </p>
-                  <Badge
-                    className={`${getToneUi(headlineOutcome.tone).soft} mb-1 rounded-full px-3 py-1 text-xs font-semibold`}
+          <div className="mt-4 grid flex-1 gap-4 xl:grid-cols-[270px_minmax(0,1fr)] xl:items-stretch">
+            <div className="flex h-full flex-col gap-2.5">
+              {market.outcomes.map((outcome) => {
+                const toneUi = getToneUi(outcome.tone);
+                const isHeadlineOutcome = outcome.id === headlineOutcome.id;
+
+                return (
+                  <div
+                    key={outcome.id}
+                    className={`flex items-center justify-between gap-4 rounded-[20px] border px-4 py-3 ${
+                      isHeadlineOutcome
+                        ? "border-white/10 bg-white/[0.05]"
+                        : "border-white/6 bg-white/[0.03]"
+                    }`}
                   >
-                    {headlineOutcome.label}
-                  </Badge>
-                </div>
-                <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.24em] text-white/32">
-                  {'retorna "'}
-                  {headlineOutcome.id}
-                  {'";'}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {market.outcomes.map((outcome) => {
-                  const toneUi = getToneUi(outcome.tone);
-
-                  return (
-                    <div
-                      key={outcome.id}
-                      className="flex items-center justify-between gap-4 rounded-2xl border border-white/6 bg-white/[0.03] px-4 py-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`h-2.5 w-2.5 rounded-full ${toneUi.dot}`}
-                        />
-                        <div>
-                          <span className="text-sm font-medium text-white/82">
-                            {outcome.label}
-                          </span>
-                          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/30">
-                            estado::{outcome.id}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-semibold tracking-tight text-white">
-                          {formatProbability(outcome.probability)}
-                        </p>
-                        <p className={`text-xs font-medium ${toneUi.text}`}>
-                          {formatSignedDelta(outcome.change)}
-                        </p>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${toneUi.dot}`}
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-white/82">
+                          {outcome.label}
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="text-right">
+                      <p
+                        className={`font-semibold tracking-tight text-white ${
+                          isHeadlineOutcome ? "text-2xl" : "text-xl"
+                        }`}
+                      >
+                        {formatProbability(outcome.probability)}
+                      </p>
+                      <p className={`text-xs font-medium ${toneUi.text}`}>
+                        {formatSignedDelta(outcome.change)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
 
-              <div className="rounded-[24px] border border-white/6 bg-white/[0.03] px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-[11px] font-medium uppercase tracking-[0.24em] text-white/36">
-                    {market.volumeLabel}
-                  </span>
-                  <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/30">
-                    {market.resolutionLabel}
+              <div className="rounded-[20px] border border-white/6 bg-white/[0.03] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      Em qual cenario voce votaria?
+                    </p>
+                    <p className="mt-1 text-xs text-white/46">
+                      Use os cenarios do snapshot atual para registrar seu
+                      palpite.
+                    </p>
+                  </div>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/30">
+                    CTA
                   </span>
                 </div>
+
+                <div className="mt-2.5 grid grid-cols-2 gap-2">
+                  {voteOptions.map((outcome) => {
+                    const toneUi = getToneUi(outcome.tone);
+
+                    return (
+                      <Button
+                        key={outcome.id}
+                        className={`h-10 min-w-0 justify-start gap-2 overflow-hidden rounded-2xl border px-2.5 text-[13px] font-semibold ${toneUi.soft}`}
+                      >
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${toneUi.dot}`}
+                        />
+                        <span className="truncate">{outcome.label}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-auto flex items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.2em] text-white/34">
+                <span>{market.volumeLabel}</span>
+                <span>{market.resolutionLabel}</span>
               </div>
             </div>
 
-            <div className="space-y-5">
-              <div className="flex flex-wrap items-center gap-3">
+            <div className="flex h-full flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 {market.outcomes.map((outcome) => {
                   const toneUi = getToneUi(outcome.tone);
 
@@ -160,27 +173,25 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
                 })}
               </div>
 
-              <div className="rounded-[28px] border border-white/7 bg-[color:var(--market-panel)]/74 p-4 shadow-xl shadow-black/20 md:p-5">
-                <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/6 pb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-market-negative/80" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-market-warning/80" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-market-positive/80" />
-                  </div>
+              <div className="flex min-h-[100%] flex-1 flex-col rounded-[22px] border border-white/7 bg-[color:var(--market-panel)]/74 p-3.5 shadow-xl shadow-black/20 md:p-4">
+                <div className="mb-2.5 flex items-center justify-end gap-3">
                   <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-white/34">
                     esteira-de-lancamento.tsx
                   </p>
                 </div>
 
-                <FeaturedMarketChart
-                  outcomes={market.outcomes}
-                  points={market.chart.points}
-                  yAxisTicks={market.chart.yAxisTicks}
-                  headlineOutcomeId={market.headlineOutcomeId}
-                />
+                <div className="min-h-[276px] flex-1">
+                  <FeaturedMarketChart
+                    outcomes={market.outcomes}
+                    points={market.chart.points}
+                    yAxisTicks={market.chart.yAxisTicks}
+                    headlineOutcomeId={market.headlineOutcomeId}
+                    height="100%"
+                  />
+                </div>
 
-                <div className="mt-4 flex items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-white/38">
-                  <span>{market.resolutionLabel}</span>
+                <div className="mt-3 flex items-center justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-white/38">
+                  <span>{headlineOutcome.label}</span>
                   <span>real-index.sinal</span>
                 </div>
               </div>
@@ -188,45 +199,6 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
           </div>
         </CardContent>
       </Card>
-
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <span
-              key={index}
-              className={`h-1.5 rounded-full transition-all ${
-                index === 0 ? "w-7 bg-white" : "w-1.5 bg-white/18"
-              }`}
-            />
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="h-11 w-11 rounded-full border border-white/8 bg-white/4 text-white/72 hover:bg-white/8 hover:text-white"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          {market.relatedMarkets.map((relatedMarket) => (
-            <Button
-              key={relatedMarket.id}
-              variant="ghost"
-              className="h-11 rounded-full border border-white/8 bg-white/4 px-4 font-mono text-[12px] font-medium uppercase tracking-[0.16em] text-white/72 hover:bg-white/8 hover:text-white"
-            >
-              [{relatedMarket.label}]
-            </Button>
-          ))}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="h-11 w-11 rounded-full border border-white/8 bg-white/4 text-white/72 hover:bg-white/8 hover:text-white"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
     </section>
   );
 }

@@ -72,28 +72,6 @@ export function HomeDashboard() {
 
     return matchesTab && matchesSearch;
   });
-  const runtimeSignals = [
-    {
-      label: "painel.itens",
-      value: openMarkets.items.length.toString().padStart(2, "0"),
-      detail: "mercados ativos",
-    },
-    {
-      label: "comunidade.notas",
-      value: featuredMarket.comments.length.toString().padStart(2, "0"),
-      detail: "notas ao vivo",
-    },
-    {
-      label: "sala.alertas",
-      value: sidebar.breakingNews.length.toString().padStart(2, "0"),
-      detail: "alertas abertos",
-    },
-    {
-      label: "acesso.modo",
-      value: data.meta.auth.status === "anonymous" ? "visitante" : "membro",
-      detail: "rota preparada",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -104,10 +82,10 @@ export function HomeDashboard() {
         authStatus={data.meta.auth.status}
       />
 
-      <main className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-8 px-4 pb-12 pt-6 md:px-6 lg:px-8">
+      <main className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-6 px-4 pb-10 pt-5 md:px-6 lg:px-8">
         <div className="texture-grid pointer-events-none absolute inset-x-4 top-0 h-72 opacity-30 md:inset-x-6 lg:inset-x-8" />
 
-        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-stretch">
           <FeaturedMarketPanel market={featuredMarket} />
           <SidebarPanel sidebar={sidebar} />
         </div>

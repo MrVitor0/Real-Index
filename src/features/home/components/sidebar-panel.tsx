@@ -1,6 +1,5 @@
 import { ChevronRight, Flame } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { HomeSidebar } from "@/features/home/contracts/home-feed";
 import {
@@ -14,19 +13,18 @@ type SidebarPanelProps = {
 };
 
 export function SidebarPanel({ sidebar }: SidebarPanelProps) {
+  const hotTopics = sidebar.hotTopics.slice(0, 3);
+
   return (
-    <aside className="grid gap-6">
-      <Card className="code-surface border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
-        <CardHeader className="px-5 pt-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-white/32">
-            tail -f ./sala-de-alertas.log
-          </p>
-          <CardTitle className="flex items-center justify-between text-xl text-white">
+    <aside className="grid gap-4 xl:h-full xl:self-stretch xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+      <Card className="code-surface flex h-full min-h-0 flex-col border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
+        <CardHeader className="px-4 pb-2 pt-4">
+          <CardTitle className="flex items-center justify-between text-lg text-white">
             <span>[{sidebar.breakingTitle}]</span>
             <ChevronRight className="h-4 w-4 text-white/36" />
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-5 pb-5 pt-2">
+        <CardContent className="flex-1 min-h-0 px-4 pb-4 pt-0">
           <div className="divide-y divide-white/6">
             {sidebar.breakingNews.map((item, index) => {
               const toneUi = getToneUi(item.tone);
@@ -34,21 +32,23 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
               return (
                 <div
                   key={item.id}
-                  className="grid grid-cols-[1fr_auto] gap-4 py-4"
+                  className="grid grid-cols-[1fr_auto] gap-3 py-3.5"
                 >
-                  <div className="flex gap-3">
+                  <div className="flex min-w-0 gap-3">
                     <span className="pt-0.5 text-sm font-medium text-white/28">
                       {index + 1}
                     </span>
-                    <p className="text-sm leading-6 text-white/82">
+                    <div className="flex min-w-0 gap-1.5">
                       <span className="mr-2 font-mono text-primary/42">
                         {"//"}
                       </span>
-                      {item.title}
-                    </p>
+                      <p className="line-clamp-2 min-w-0 text-sm leading-5 text-white/82">
+                        {item.title}
+                      </p>
+                    </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-semibold tracking-tight text-white">
+                    <p className="text-xl font-semibold tracking-tight text-white">
                       {formatProbability(item.probability)}
                     </p>
                     <p className={`text-xs font-medium ${toneUi.text}`}>
@@ -62,25 +62,22 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
         </CardContent>
       </Card>
 
-      <Card className="code-surface border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
-        <CardHeader className="px-5 pt-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-white/32">
-            ranking ./assuntos-quentes.json
-          </p>
-          <CardTitle className="flex items-center justify-between text-xl text-white">
+      <Card className="code-surface flex h-full min-h-0 flex-col border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
+        <CardHeader className="px-4 pb-2 pt-4">
+          <CardTitle className="flex items-center justify-between text-lg text-white">
             <span>[{sidebar.hotTopicsTitle}]</span>
             <ChevronRight className="h-4 w-4 text-white/36" />
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 px-5 pb-5 pt-2">
+        <CardContent className="flex-1 min-h-0 space-y-3 px-4 pb-4 pt-0">
           <div className="divide-y divide-white/6">
-            {sidebar.hotTopics.map((topic, index) => {
+            {hotTopics.map((topic, index) => {
               const toneUi = getToneUi(topic.tone);
 
               return (
                 <div
                   key={topic.id}
-                  className="grid grid-cols-[1fr_auto] gap-4 py-4"
+                  className="grid grid-cols-[1fr_auto] gap-3 py-3.5"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-white/28">
@@ -100,13 +97,6 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
               );
             })}
           </div>
-
-          <Button
-            variant="outline"
-            className="h-11 w-full rounded-full border-white/8 bg-white/[0.03] font-mono text-[11px] uppercase tracking-[0.22em] text-white hover:bg-white/8 hover:text-white"
-          >
-            {sidebar.exploreLabel}
-          </Button>
         </CardContent>
       </Card>
     </aside>

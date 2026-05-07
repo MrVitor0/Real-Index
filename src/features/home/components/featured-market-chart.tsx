@@ -19,6 +19,7 @@ type FeaturedMarketChartProps = {
   points: FeaturedChartPoint[];
   yAxisTicks: number[];
   headlineOutcomeId: string;
+  height?: number | string;
 };
 
 type TooltipPayloadItem = {
@@ -83,15 +84,16 @@ export function FeaturedMarketChart({
   points,
   yAxisTicks,
   headlineOutcomeId,
+  height = 280,
 }: FeaturedMarketChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={height}>
       <LineChart
         data={points}
         margin={{
-          top: 12,
-          right: 8,
-          left: -16,
+          top: 8,
+          right: 4,
+          left: -20,
           bottom: 0,
         }}
       >
@@ -104,14 +106,14 @@ export function FeaturedMarketChart({
           dataKey="label"
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "rgba(255,255,255,0.38)", fontSize: 12 }}
+          tick={{ fill: "rgba(255,255,255,0.36)", fontSize: 11 }}
         />
         <YAxis
           axisLine={false}
           tickLine={false}
-          width={44}
+          width={38}
           ticks={yAxisTicks}
-          tick={{ fill: "rgba(255,255,255,0.38)", fontSize: 12 }}
+          tick={{ fill: "rgba(255,255,255,0.36)", fontSize: 11 }}
           tickFormatter={(value) => `${value}%`}
         />
         <Tooltip

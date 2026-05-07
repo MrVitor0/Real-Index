@@ -28,31 +28,26 @@ export function DashboardHeader({
 
   return (
     <header className="surface-noise sticky top-0 z-40 border-b border-white/6 bg-market-panel/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-4 py-4 md:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-3 px-4 py-3 md:px-6 lg:px-8">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 rounded-2xl">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-primary/12 text-sm font-semibold text-primary shadow-lg shadow-primary/10">
                 RI
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs uppercase tracking-[0.24em] text-primary/68">
-                    &lt;
-                  </span>
-                  <span className="text-xl font-semibold tracking-tight text-white">
-                    {navigation.brandLabel}
-                  </span>
-                  <span className="font-mono text-xs uppercase tracking-[0.24em] text-primary/68">
-                    /&gt;
-                  </span>
-                  <Badge className="rounded-full border-white/10 bg-white/6 px-2.5 py-1 font-mono text-[11px] font-semibold tracking-[0.18em] text-white/70 hover:bg-white/6">
-                    {navigation.brandBadge}
-                  </Badge>
-                </div>
-                <p className="hidden font-mono text-[11px] uppercase tracking-[0.18em] text-white/30 sm:block">
-                  radar da comunidade // sala de lancamentos // pulso dev
-                </p>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs uppercase tracking-[0.24em] text-primary/68">
+                  &lt;
+                </span>
+                <span className="text-xl font-semibold tracking-tight text-white">
+                  {navigation.brandLabel}
+                </span>
+                <span className="font-mono text-xs uppercase tracking-[0.24em] text-primary/68">
+                  /&gt;
+                </span>
+                <Badge className="rounded-full border-white/10 bg-white/6 px-2.5 py-1 font-mono text-[11px] font-semibold tracking-[0.18em] text-white/70 hover:bg-white/6">
+                  {navigation.brandBadge}
+                </Badge>
               </div>
             </Link>
 
@@ -124,7 +119,7 @@ export function DashboardHeader({
 
         <nav
           ref={categoriesRef}
-          className="scrollbar-hidden flex items-center gap-2 overflow-x-auto pb-1 select-none"
+          className="scrollbar-hidden flex items-center gap-2 overflow-x-auto pb-0.5 select-none"
           {...categoriesDragScrollProps}
         >
           <span className="shrink-0 pr-2 font-mono text-[11px] uppercase tracking-[0.28em] text-white/28">
