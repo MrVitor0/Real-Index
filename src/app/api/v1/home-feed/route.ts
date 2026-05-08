@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 
 import { homeFeedResponseSchema } from "@/features/home/contracts/home-feed";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import { getHomeFeedData } from "@/server/markets/catalog";
 
 export async function GET(request: Request) {
   const context = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context,
+    resource: "home-feed",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   try {
     const data = await getHomeFeedData();

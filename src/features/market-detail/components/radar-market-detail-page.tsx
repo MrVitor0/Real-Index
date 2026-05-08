@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,10 +9,10 @@ import type {
 } from "@/features/market-detail/contracts/radar-market-detail";
 import { getToneUi } from "@/features/home/lib/presentation";
 import { formatSignalScore } from "@/features/market-detail/lib/forecast";
-import { useRadarMarketDetail } from "@/features/market-detail/hooks/use-radar-market-detail";
+import { useRadarLiveSnapshot } from "@/features/market-detail/hooks/use-radar-live-snapshot";
 
 import { RadarActivePositionCard } from "./radar-active-position-card";
-import { RadarForecastPanel } from "./radar-forecast-panel";
+import { RadarForecastLauncherCard } from "./radar-forecast-launcher-card";
 import { RadarMarketDetailChart } from "./radar-market-detail-chart";
 
 type RadarMarketDetailPageProps = {
@@ -25,14 +24,18 @@ export function RadarMarketDetailPage({
   market,
   initialAccountState,
 }: RadarMarketDetailPageProps) {
-  const [viewerState, setViewerState] =
-    useState<RadarForecastAccountState>(initialAccountState);
   const {
-    data: liveMarket,
+    data: liveSnapshot,
     error,
     status,
-    replace,
-  } = useRadarMarketDetail(market);
+    replaceAccountState,
+    replaceMarket,
+  } = useRadarLiveSnapshot({
+    initialMarket: market,
+    initialAccountState,
+  });
+  const liveMarket = liveSnapshot.market;
+  const viewerState = liveSnapshot.accountState;
   const toneUi = getToneUi(liveMarket.tone);
 
   return (
@@ -107,11 +110,12 @@ export function RadarMarketDetailPage({
         </div>
 
         <div className="space-y-6">
-          <RadarForecastPanel
+          <RadarForecastLauncherCard
             market={liveMarket}
-            initialAccountState={initialAccountState}
-            onAccountStateChange={setViewerState}
-            onMarketUpdate={replace}
+            accountState={viewerState}
+            accountStateSyncMode="external"
+            onAccountStateChange={replaceAccountState}
+            onMarketUpdate={replaceMarket}
           />
         </div>
       </section>

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth/server";
+import { enforceRateLimit } from "@/server/api/rate-limit";
+import { createRouteContext } from "@/server/api/route-context";
 
 type AuthRouteContext = {
   params: Promise<{
@@ -28,6 +30,18 @@ async function handle(
 ) {
   if (!auth) {
     return createUnavailableResponse();
+  }
+
+  const routeContext = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context: routeContext,
+    presetName: method === "GET" ? "publicRead" : "authAttempt",
+    resource: method === "GET" ? "auth-read" : "auth-attempt",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
   }
 
   const handler = auth.handler()[method];

@@ -6,7 +6,8 @@ import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { useHomeFeed } from "@/features/home/hooks/use-home-feed";
+import type { FeaturedMarket } from "@/features/home/contracts/home-feed";
+import { useHomeLiveSnapshot } from "@/features/home/hooks/use-home-live-snapshot";
 
 import { DashboardHeader } from "./dashboard-header";
 import { FeaturedMarketPanel } from "./featured-market-panel";
@@ -21,7 +22,7 @@ type HomeDashboardProps = {
 };
 
 export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
-  const { data, error, reload, status } = useHomeFeed();
+  const { data, error, reload, status } = useHomeLiveSnapshot();
   const [activeTab, setActiveTab] = useState("Tudo");
   const [searchQuery, setSearchQuery] = useState("");
   const deferredSearch = useDeferredValue(searchQuery);
@@ -42,11 +43,11 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
             </Badge>
             <AlertTriangle className="h-10 w-10 text-market-negative" />
             <h1 className="text-3xl font-semibold tracking-tight text-white">
-              A primeira home do sistema nao conseguiu carregar.
+              O Real Index não conseguiu carregar.
             </h1>
             <p className="text-sm leading-7 text-white/48">
               {error ??
-                "O endpoint interno nao respondeu com um estado valido do painel de exemplo."}
+                "O endpoint interno não respondeu com um estado válido do painel de exemplo."}
             </p>
             <Button onClick={reload} className="rounded-full px-6">
               Tentar novamente
@@ -59,7 +60,12 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
     );
   }
 
-  const { navigation, featuredMarket, openMarkets } = data.data;
+  const { homeFeed, ranking, recentActivity, communityMetrics, navbarBalance } =
+    data.data;
+  const { navigation, featuredMarket, featuredMarkets, openMarkets } = homeFeed;
+  const heroMarkets = (
+    featuredMarkets.length > 0 ? featuredMarkets : [featuredMarket]
+  ) as [FeaturedMarket, ...FeaturedMarket[]];
   const baseTabLabel = openMarkets.tabs[0]?.label ?? "Tudo";
   const resolvedActiveTab =
     openMarkets.tabs.find((tab) => tab.label === activeTab)?.label ??
@@ -96,6 +102,10 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
         authEnabled={authEnabled}
         authStatus={data.meta.auth.status}
         initialBalance={null}
+        liveBalanceState={{
+          balance: navbarBalance,
+          status,
+        }}
       />
 
       <main className="relative mx-auto flex w-full max-w-[1880px] flex-1 flex-col gap-6 px-4 pb-10 pt-5 md:px-6 lg:px-8">
@@ -106,17 +116,31 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
                 showActivity={false}
                 className="h-full"
                 rankingClassName="max-w-none"
+                liveData={{
+                  rankingItems: ranking.items.slice(0, 3),
+                  rankingStatus: status,
+                  activityItems: recentActivity.items.slice(0, 3),
+                  activityStatus: status,
+                }}
               />
             </div>
           </div>
 
           <div className="order-1 min-w-0 xl:order-2">
-            <FeaturedMarketPanel market={featuredMarket} />
+            <FeaturedMarketPanel markets={heroMarkets} />
           </div>
 
           <div className="order-3 xl:self-stretch">
             <div className="h-full xl:sticky xl:top-24">
-              <SidebarPanel />
+              <SidebarPanel
+                liveData={{
+                  activityItems: recentActivity.items.slice(0, 3),
+                  activityStatus: status,
+                  metricItems: communityMetrics.items,
+                  metricsStatus: status,
+                  metricsTitle: communityMetrics.title,
+                }}
+              />
             </div>
           </div>
         </section>

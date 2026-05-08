@@ -2,7 +2,7 @@ import "server-only";
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import type {
   FeaturedChartPoint,
@@ -37,6 +37,7 @@ import { siteConfig } from "@/config/site";
 import { recordPlatformActivity } from "@/server/activity/log";
 import { getDb } from "@/server/db/client";
 import {
+  forecastLedgerEntries,
   predictionEvents,
   predictionEventSnapshots,
   profiles,
@@ -58,6 +59,7 @@ type EventWithCreatorRow = {
     Profile,
     "id" | "username" | "displayName" | "avatarUrl"
   > | null;
+  participantCount: number;
   snapshots: PredictionEventSnapshot[];
 };
 
@@ -83,6 +85,11 @@ const sidebarTitles = {
   exploreLabel: "Abrir feed completo",
 } as const;
 const topLinks = [
+  {
+    id: "marketplace",
+    label: "Marketplace",
+    href: "/marketplace",
+  },
   {
     id: "documentacao",
     label: "Documentação",
@@ -654,14 +661,30 @@ async function listEventRows(where?: ReturnType<typeof eq>) {
         desc(predictionEvents.updatedAt),
       );
   const eventIds = joinedRows.map((row) => row.event.id);
-  const snapshots = eventIds.length
-    ? await db
-        .select()
-        .from(predictionEventSnapshots)
-        .where(inArray(predictionEventSnapshots.predictionEventId, eventIds))
-        .orderBy(asc(predictionEventSnapshots.createdAt))
-    : [];
+  const [snapshots, participantCountRows] = eventIds.length
+    ? await Promise.all([
+        db
+          .select()
+          .from(predictionEventSnapshots)
+          .where(inArray(predictionEventSnapshots.predictionEventId, eventIds))
+          .orderBy(asc(predictionEventSnapshots.createdAt)),
+        db
+          .select({
+            predictionEventId: forecastLedgerEntries.predictionEventId,
+            participantCount: sql<number>`cast(count(distinct ${forecastLedgerEntries.profileId}) as integer)`,
+          })
+          .from(forecastLedgerEntries)
+          .where(
+            and(
+              isNotNull(forecastLedgerEntries.predictionEventId),
+              inArray(forecastLedgerEntries.predictionEventId, eventIds),
+            ),
+          )
+          .groupBy(forecastLedgerEntries.predictionEventId),
+      ])
+    : [[], []];
   const snapshotsByEventId = new Map<string, PredictionEventSnapshot[]>();
+  const participantCountsByEventId = new Map<string, number>();
 
   for (const snapshot of snapshots) {
     const currentSnapshots =
@@ -670,9 +693,21 @@ async function listEventRows(where?: ReturnType<typeof eq>) {
     snapshotsByEventId.set(snapshot.predictionEventId, currentSnapshots);
   }
 
+  for (const participantCountRow of participantCountRows) {
+    if (!participantCountRow.predictionEventId) {
+      continue;
+    }
+
+    participantCountsByEventId.set(
+      participantCountRow.predictionEventId,
+      participantCountRow.participantCount,
+    );
+  }
+
   return joinedRows.map<EventWithCreatorRow>((row) => ({
     event: row.event,
     creator: mapCreator(row),
+    participantCount: participantCountsByEventId.get(row.event.id) ?? 0,
     snapshots: snapshotsByEventId.get(row.event.id) ?? [],
   }));
 }
@@ -744,10 +779,9 @@ function buildChartPoints(row: EventWithCreatorRow): RadarMarketChartPoint[] {
 
 function buildFeaturedChartPoints(
   row: EventWithCreatorRow,
+  currentProbability: number,
 ): FeaturedChartPoint[] {
-  const chartPoints = buildChartPoints(row);
-
-  return chartPoints.map(
+  const chartPoints = buildChartPoints(row).map(
     (point) =>
       ({
         label: point.label,
@@ -755,6 +789,25 @@ function buildFeaturedChartPoints(
         no: roundValue(100 - point.probability),
       }) as unknown as FeaturedChartPoint,
   );
+  const currentPoint = {
+    label: "Agora",
+    yes: currentProbability,
+    no: roundValue(100 - currentProbability),
+  } as unknown as FeaturedChartPoint;
+  const latestPoint = chartPoints.at(-1);
+
+  if (!latestPoint) {
+    return [currentPoint];
+  }
+
+  if (
+    typeof latestPoint.yes === "number" &&
+    Math.abs(latestPoint.yes - currentProbability) < 0.05
+  ) {
+    return [...chartPoints.slice(0, -1), currentPoint];
+  }
+
+  return [...chartPoints, currentPoint];
 }
 
 function buildRelatedMarkets(
@@ -796,6 +849,7 @@ function buildFeaturedMarket(
     headlineOutcomeId: "yes",
     volumeLabel: formatWatcherCountLabel(state.watcherCount),
     resolutionLabel: formatCloseLabel(row.event.expiresAt),
+    participantCount: row.participantCount,
     outcomes: [
       {
         id: "yes",
@@ -824,7 +878,7 @@ function buildFeaturedMarket(
       : [],
     chart: {
       yAxisTicks: chartTicks,
-      points: buildFeaturedChartPoints(row),
+      points: buildFeaturedChartPoints(row, yesProbability),
     },
     relatedMarkets: buildRelatedMarkets(row, rows).map((relatedRow) => ({
       id: relatedRow.event.slug,
@@ -935,15 +989,17 @@ export async function getHomeNavigation() {
 export async function getHomeFeedData(): Promise<HomeFeedData> {
   const rows = await listEventRows(eq(predictionEvents.status, "active"));
   const marketCards = rows.map(buildMarketCard);
-  const featuredRow = rows[0];
+  const featuredMarkets = rows.map((row) => buildFeaturedMarket(row, rows));
+  const featuredMarket = featuredMarkets[0];
 
-  if (!featuredRow) {
+  if (!featuredMarket) {
     throw new Error("Nenhum mercado ativo disponivel para montar a home.");
   }
 
   return homeFeedDataSchema.parse({
     navigation: buildHomeNavigation(marketCards),
-    featuredMarket: buildFeaturedMarket(featuredRow, rows),
+    featuredMarket,
+    featuredMarkets,
     sidebar: buildSidebar(rows),
     openMarkets: {
       title: "Radar da comunidade",
@@ -1121,29 +1177,10 @@ export async function syncViewerProfile(viewer: ViewerIdentity) {
   await ensurePredictionCatalogBootstrapped();
 
   const db = getDb();
-  const [existingProfile] = await db
-    .select()
-    .from(profiles)
-    .where(eq(profiles.authUserId, viewer.id))
-    .limit(1);
   const nextDisplayName =
     viewer.name.trim() || viewer.email.split("@")[0] || "Usuario";
 
-  if (existingProfile) {
-    const [updatedProfile] = await db
-      .update(profiles)
-      .set({
-        displayName: nextDisplayName,
-        avatarUrl: viewer.image,
-        updatedAt: new Date(),
-      })
-      .where(eq(profiles.id, existingProfile.id))
-      .returning();
-
-    return updatedProfile;
-  }
-
-  const [createdProfile] = await db
+  const [profile] = await db
     .insert(profiles)
     .values({
       authUserId: viewer.id,
@@ -1151,9 +1188,17 @@ export async function syncViewerProfile(viewer: ViewerIdentity) {
       displayName: nextDisplayName,
       avatarUrl: viewer.image,
     })
+    .onConflictDoUpdate({
+      target: profiles.authUserId,
+      set: {
+        displayName: nextDisplayName,
+        avatarUrl: viewer.image,
+        updatedAt: new Date(),
+      },
+    })
     .returning();
 
-  return createdProfile;
+  return profile;
 }
 
 async function buildUniqueSlug(title: string) {

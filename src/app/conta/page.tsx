@@ -3,24 +3,20 @@ import type { Route } from "next";
 import Link from "next/link";
 import {
   ChartColumnIncreasing,
-  Home,
+  Gift,
   Layers3,
   ShieldCheck,
   UserRound,
   WalletCards,
 } from "lucide-react";
-import { UserButton } from "@neondatabase/auth/react/ui";
 import { redirect } from "next/navigation";
 
-import { RealLogoLockup } from "@/components/branding/real-logo";
 import { AppNavbar } from "@/components/navigation/app-navbar";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { ForecastPositionsGrid } from "@/features/account/components/forecast-positions-grid";
-import { siteConfig } from "@/config/site";
 import { getServerSession } from "@/lib/auth/server";
 import { getEnvironmentStatus } from "@/lib/env";
-import { cn } from "@/lib/utils";
 import { listMarketsCreatedByViewer } from "@/server/markets/catalog";
 import { getViewerForecastAccountSummary } from "@/server/markets/trading";
 
@@ -42,6 +38,7 @@ export const metadata: Metadata = {
 const loginRoute = "/login" as Route;
 const loginWithNextRoute = "/login?next=%2Fconta" as Route;
 const accountPositionsRoute = "/conta/posicoes" as Route;
+const marketplaceRoute = "/marketplace" as Route;
 const createMarketRoute = "/conta/mercados/novo" as Route;
 
 export default async function ContaPage() {
@@ -163,6 +160,34 @@ export default async function ContaPage() {
               <p className="mt-2 text-lg font-semibold text-white">
                 {sessionExpiration ?? "—"}
               </p>
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-[32px] border border-white/8 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.2),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.16),transparent_24%),rgba(11,15,28,0.92)] p-6 shadow-[0_24px_64px_-48px_rgba(0,0,0,0.9)]">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-primary">
+                  <Gift className="h-3.5 w-3.5" />
+                  Marketplace
+                </div>
+                <h2 className="mt-4 text-2xl font-semibold text-white">
+                  Troque seus REAL Credits por perks da plataforma.
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-white/62">
+                  Abra a nova area do marketplace para resgatar itens como nova
+                  palheta da home, pedido de novo mercado e outros perks
+                  cadastrados diretamente no banco.
+                </p>
+              </div>
+
+              <Link
+                href={marketplaceRoute}
+                className={buttonVariants({
+                  className: "h-11 rounded-xl px-4",
+                })}
+              >
+                Abrir marketplace
+              </Link>
             </div>
           </section>
 

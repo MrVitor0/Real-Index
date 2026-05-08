@@ -22,6 +22,12 @@ type LiveSidebarPanelProps = {
   className?: string;
   rankingClassName?: string;
   activityClassName?: string;
+  liveData?: {
+    rankingItems: ParticipantRankingItem[];
+    rankingStatus: CardStatus;
+    activityItems: RecentActivityItem[];
+    activityStatus: CardStatus;
+  };
 };
 
 type ActivityFeedVariant = "default" | "stream";
@@ -71,6 +77,10 @@ function formatRelativeTime(value: string) {
   }
 
   return formatter.format(Math.round(diffInSeconds / 86_400), "day");
+}
+
+function formatCompactRankingCredits(value: string) {
+  return value.replace(/REAL Credits?/i, "R.C");
 }
 
 export function RankingCard({
@@ -165,10 +175,10 @@ export function RankingCard({
               <div className="grid grid-cols-2 gap-2 text-xs text-white/54">
                 <div className="rounded-[18px] border border-white/8 bg-white/4 px-3 py-2.5">
                   <p className="uppercase tracking-[0.16em] text-white/28">
-                    delta
+                    lucro
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {champion.realizedDeltaLabel}
+                  <p className="mt-1 whitespace-nowrap text-sm font-semibold text-white">
+                    {formatCompactRankingCredits(champion.realizedDeltaLabel)}
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-white/8 bg-white/4 px-3 py-2.5">
@@ -227,8 +237,8 @@ export function RankingCard({
                             </p>
                           </div>
 
-                          <p className="text-sm font-semibold text-white">
-                            {item.totalEquityLabel}
+                          <p className="whitespace-nowrap text-sm font-semibold text-white">
+                            {formatCompactRankingCredits(item.totalEquityLabel)}
                           </p>
                         </div>
 
@@ -456,31 +466,77 @@ export function ActivityFeedCard({
   );
 }
 
-export function LiveSidebarPanel({
+function LiveSidebarPanelContent({
   showActivity = true,
   className,
   rankingClassName,
   activityClassName,
-}: LiveSidebarPanelProps) {
-  const rankingState = useParticipantRanking(3);
-  const activityState = useRecentActivity(3);
-  const rankingItems = rankingState.data?.data.items.slice(0, 3) ?? [];
-  const activityItems = activityState.data?.data.items.slice(0, 3) ?? [];
-
+  rankingItems,
+  rankingStatus,
+  activityItems,
+  activityStatus,
+}: {
+  showActivity: boolean;
+  className?: string;
+  rankingClassName?: string;
+  activityClassName?: string;
+  rankingItems: ParticipantRankingItem[];
+  rankingStatus: CardStatus;
+  activityItems: RecentActivityItem[];
+  activityStatus: CardStatus;
+}) {
   return (
     <aside className={cn("grid gap-3.5", className)}>
       <RankingCard
         items={rankingItems}
-        status={rankingState.status}
+        status={rankingStatus}
         className={rankingClassName}
       />
       {showActivity ? (
         <ActivityFeedCard
           items={activityItems}
-          status={activityState.status}
+          status={activityStatus}
           className={activityClassName}
         />
       ) : null}
     </aside>
+  );
+}
+
+function PolledLiveSidebarPanel(
+  props: Omit<LiveSidebarPanelProps, "liveData">,
+) {
+  const rankingState = useParticipantRanking(3);
+  const activityState = useRecentActivity(3);
+
+  return (
+    <LiveSidebarPanelContent
+      {...props}
+      showActivity={props.showActivity ?? true}
+      rankingItems={rankingState.data?.data.items.slice(0, 3) ?? []}
+      rankingStatus={rankingState.status}
+      activityItems={activityState.data?.data.items.slice(0, 3) ?? []}
+      activityStatus={activityState.status}
+    />
+  );
+}
+
+export function LiveSidebarPanel({
+  liveData,
+  ...props
+}: LiveSidebarPanelProps) {
+  if (!liveData) {
+    return <PolledLiveSidebarPanel {...props} />;
+  }
+
+  return (
+    <LiveSidebarPanelContent
+      {...props}
+      showActivity={props.showActivity ?? true}
+      rankingItems={liveData.rankingItems}
+      rankingStatus={liveData.rankingStatus}
+      activityItems={liveData.activityItems}
+      activityStatus={liveData.activityStatus}
+    />
   );
 }

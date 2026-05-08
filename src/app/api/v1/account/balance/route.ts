@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 
 import { navbarBalanceSchema } from "@/features/account/contracts/navbar-balance";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import { getViewerForecastBalance } from "@/server/markets/trading";
 
 export async function GET(request: Request) {
   const context = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context,
+    resource: "account-balance",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   try {
     const balance = navbarBalanceSchema.parse(

@@ -521,7 +521,7 @@ function buildActivityCopy(record: RecentActivityRecord) {
       return {
         group: resolveActivityGroup(record.type),
         typeLabel: "Forecast",
-        headline: `${record.actor.displayName} reforcou uma leitura`,
+        headline: `${record.actor.displayName} reforcou um mercado`,
         description: [
           marketTitle,
           activeSideLabel,
@@ -534,7 +534,7 @@ function buildActivityCopy(record: RecentActivityRecord) {
       return {
         group: resolveActivityGroup(record.type),
         typeLabel: "Saida",
-        headline: `${record.actor.displayName} liberou credits de uma leitura`,
+        headline: `${record.actor.displayName} liberou credits de um mercado`,
         description: [
           marketTitle,
           activeSideLabel,

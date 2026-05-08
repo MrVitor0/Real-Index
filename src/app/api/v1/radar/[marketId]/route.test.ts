@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recordPlatformActivity } from "@/server/activity/log";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import {
   getPredictionEventIdBySlug,
@@ -14,6 +15,10 @@ vi.mock("@/features/market-detail/contracts/radar-market-detail", () => ({
   radarMarketDetailSchema: {
     parse: vi.fn((value) => value),
   },
+}));
+
+vi.mock("@/server/api/rate-limit", () => ({
+  enforceRateLimit: vi.fn(),
 }));
 
 vi.mock("@/server/api/route-context", () => ({
@@ -31,6 +36,7 @@ vi.mock("@/server/markets/catalog", () => ({
 }));
 
 const mockedCreateRouteContext = vi.mocked(createRouteContext);
+const mockedEnforceRateLimit = vi.mocked(enforceRateLimit);
 const mockedRecordPlatformActivity = vi.mocked(recordPlatformActivity);
 const mockedGetPredictionEventIdBySlug = vi.mocked(getPredictionEventIdBySlug);
 const mockedGetRadarMarketDetailBySlug = vi.mocked(getRadarMarketDetailBySlug);
@@ -39,6 +45,7 @@ const mockedSyncViewerProfile = vi.mocked(syncViewerProfile);
 describe("GET /api/v1/radar/[marketId]", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mockedEnforceRateLimit.mockResolvedValue(null);
     mockedCreateRouteContext.mockResolvedValue({
       requestId: "req-radar",
       auth: {

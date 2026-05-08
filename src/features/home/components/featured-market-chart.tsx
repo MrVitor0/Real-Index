@@ -1,7 +1,8 @@
 import {
+  Area,
   CartesianGrid,
-  Line,
-  LineChart,
+  ComposedChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -13,6 +14,11 @@ import type {
   FeaturedOutcome,
 } from "@/features/home/contracts/home-feed";
 import { formatProbability, getToneUi } from "@/features/home/lib/presentation";
+
+type FeaturedChartSeriesPoint = {
+  label: string;
+  [key: string]: number | string;
+};
 
 type LiveDotProps = {
   cx?: number;
@@ -33,39 +39,150 @@ type FeaturedMarketChartProps = {
 type TooltipPayloadItem = {
   dataKey?: string | number;
   value?: number;
+  payload?: FeaturedChartSeriesPoint;
 };
+
+function roundToTenth(value: number) {
+  return Number(value.toFixed(1));
+}
+
+function formatSignedPoints(value: number) {
+  if (Math.abs(value) < 0.05) {
+    return "0 pt";
+  }
+
+  return `${value > 0 ? "+" : ""}${roundToTenth(value)} pt`;
+}
+
+function formatAxisPoints(value: number) {
+  if (Math.abs(value) < 0.05) {
+    return "0";
+  }
+
+  return `${value > 0 ? "+" : ""}${roundToTenth(value)}`;
+}
+
+function getChangeDataKey(outcomeId: string) {
+  return `${outcomeId}Change`;
+}
+
+function buildChartSeries(
+  points: FeaturedChartPoint[],
+  outcomes: FeaturedOutcome[],
+) {
+  const openingPoint = points[0];
+
+  return points.reduce<FeaturedChartSeriesPoint[]>((accumulator, point) => {
+    const seriesPoint: FeaturedChartSeriesPoint = {
+      label: point.label,
+    };
+
+    outcomes.forEach((outcome) => {
+      const probability = point[outcome.id];
+
+      if (typeof probability !== "number") {
+        return;
+      }
+
+      const openingProbability =
+        typeof openingPoint?.[outcome.id] === "number"
+          ? openingPoint[outcome.id]
+          : probability;
+
+      seriesPoint[outcome.id] = probability;
+      seriesPoint[getChangeDataKey(outcome.id)] = roundToTenth(
+        probability - openingProbability,
+      );
+    });
+
+    accumulator.push(seriesPoint);
+    return accumulator;
+  }, []);
+}
+
+function buildDynamicScale(values: number[], fallbackTicks: number[]) {
+  const fallbackSpread = Math.max(
+    (fallbackTicks.at(-1) ?? 100) - (fallbackTicks[0] ?? 0),
+    10,
+  );
+  const fallbackHalfRange = Math.max(roundToTenth(fallbackSpread / 20), 4);
+
+  if (!values.length) {
+    const tickStep = (fallbackHalfRange * 2) / 4;
+
+    return {
+      domain: [-fallbackHalfRange, fallbackHalfRange] as [number, number],
+      ticks: Array.from({ length: 5 }, (_, index) =>
+        roundToTenth(-fallbackHalfRange + tickStep * index),
+      ),
+    };
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const peak = Math.max(Math.abs(min), Math.abs(max));
+  const padding = peak < 1.8 ? 1.6 : Math.max(peak * 0.22, 0.9);
+  const halfRange = roundToTenth(Math.max(peak + padding, fallbackHalfRange));
+  const tickStep = (halfRange * 2) / 4;
+  const ticks = Array.from({ length: 5 }, (_, index) =>
+    roundToTenth(-halfRange + tickStep * index),
+  );
+
+  return {
+    domain: [-halfRange, halfRange] as [number, number],
+    ticks,
+  };
+}
+
+function getGradientId(headlineOutcomeId: string) {
+  return `featured-market-chart-${headlineOutcomeId.replace(/[^a-z0-9_-]/gi, "-")}`;
+}
 
 function ChartTooltip({
   active,
   label,
   payload,
   outcomes,
+  headlineOutcomeId,
 }: {
   active?: boolean;
   label?: string;
   payload?: TooltipPayloadItem[];
   outcomes: FeaturedOutcome[];
+  headlineOutcomeId: string;
 }) {
-  if (!active || !payload?.length) {
+  const chartPoint = payload?.[0]?.payload;
+
+  if (!active || !chartPoint) {
     return null;
   }
+
+  const orderedOutcomes = [
+    ...outcomes.filter((outcome) => outcome.id === headlineOutcomeId),
+    ...outcomes.filter((outcome) => outcome.id !== headlineOutcomeId),
+  ];
 
   return (
     <div className="code-surface min-w-44 rounded-2xl border border-white/10 bg-market-panel/95 p-3 shadow-2xl shadow-black/35 backdrop-blur-md">
       <p className="mb-2 font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-white/45">
-        ponto::{label}
+        leitura::{label}
       </p>
       <div className="space-y-2">
-        {outcomes.map((outcome) => {
-          const entry = payload.find(
-            (payloadItem) => payloadItem.dataKey === outcome.id,
-          );
+        {orderedOutcomes.map((outcome) => {
+          const toneUi = getToneUi(outcome.tone);
+          const probability = chartPoint[outcome.id];
+          const delta = chartPoint[getChangeDataKey(outcome.id)];
 
-          if (typeof entry?.value !== "number") {
+          if (typeof probability !== "number" || typeof delta !== "number") {
             return null;
           }
 
-          const toneUi = getToneUi(outcome.tone);
+          const movementToneClassName =
+            delta > 0
+              ? "text-market-positive"
+              : delta < 0
+                ? "text-market-negative"
+                : "text-white/55";
 
           return (
             <div
@@ -76,9 +193,16 @@ function ChartTooltip({
                 <span className={`h-2.5 w-2.5 rounded-full ${toneUi.dot}`} />
                 <span>{outcome.label}</span>
               </div>
-              <span className="font-semibold text-white">
-                {formatProbability(entry.value)}
-              </span>
+              <div className="text-right">
+                <p className="font-semibold text-white">
+                  {formatProbability(probability)}
+                </p>
+                <p
+                  className={`text-[11px] font-semibold ${movementToneClassName}`}
+                >
+                  {formatSignedPoints(delta)}
+                </p>
+              </div>
             </div>
           );
         })}
@@ -133,10 +257,25 @@ export function FeaturedMarketChart({
   headlineOutcomeId,
   height = 280,
 }: FeaturedMarketChartProps) {
+  const headlineOutcome =
+    outcomes.find((outcome) => outcome.id === headlineOutcomeId) ?? outcomes[0];
+
+  if (!headlineOutcome) {
+    return null;
+  }
+
+  const chartSeries = buildChartSeries(points, outcomes);
+  const movementValues = chartSeries
+    .map((point) => point[getChangeDataKey(headlineOutcome.id)])
+    .filter((value): value is number => typeof value === "number");
+  const chartScale = buildDynamicScale(movementValues, yAxisTicks);
+  const toneUi = getToneUi(headlineOutcome.tone);
+  const gradientId = getGradientId(headlineOutcome.id);
+
   return (
     <ResponsiveContainer width="100%" height={height} minWidth={0}>
-      <LineChart
-        data={points}
+      <ComposedChart
+        data={chartSeries}
         margin={{
           top: 8,
           right: 4,
@@ -144,6 +283,13 @@ export function FeaturedMarketChart({
           bottom: 0,
         }}
       >
+        <defs>
+          <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor={toneUi.line} stopOpacity={0.28} />
+            <stop offset="60%" stopColor={toneUi.line} stopOpacity={0.08} />
+            <stop offset="100%" stopColor={toneUi.line} stopOpacity={0} />
+          </linearGradient>
+        </defs>
         <CartesianGrid
           vertical={false}
           stroke="var(--market-grid)"
@@ -160,55 +306,52 @@ export function FeaturedMarketChart({
           axisLine={false}
           tickLine={false}
           width={38}
-          ticks={yAxisTicks}
+          ticks={chartScale.ticks}
+          domain={chartScale.domain}
           tick={{ fill: "rgba(255,255,255,0.36)", fontSize: 11 }}
-          tickFormatter={(value) => `${value}%`}
+          tickFormatter={formatAxisPoints}
+        />
+        <ReferenceLine
+          y={0}
+          stroke="rgba(255,255,255,0.15)"
+          strokeDasharray="4 6"
         />
         <Tooltip
           cursor={{
             stroke: "rgba(255,255,255,0.18)",
             strokeDasharray: "4 6",
           }}
-          content={<ChartTooltip outcomes={outcomes} />}
-        />
-        {outcomes.map((outcome) => {
-          const toneUi = getToneUi(outcome.tone);
-
-          return (
-            <Line
-              key={outcome.id}
-              type="monotoneX"
-              dataKey={outcome.id}
-              stroke={toneUi.line}
-              strokeLinecap="round"
-              strokeWidth={outcome.id === headlineOutcomeId ? 3.25 : 2.1}
-              isAnimationActive
-              animationDuration={520}
-              animationEasing="ease-out"
-              dot={
-                outcome.id === headlineOutcomeId
-                  ? (dotProps: {
-                      cx?: number;
-                      cy?: number;
-                      index?: number;
-                    }) => (
-                      <HeadlineLiveDot
-                        {...dotProps}
-                        stroke={toneUi.line}
-                        totalPoints={points.length}
-                      />
-                    )
-                  : false
-              }
-              activeDot={{
-                r: 4,
-                strokeWidth: 0,
-                fill: toneUi.line,
-              }}
+          content={
+            <ChartTooltip
+              outcomes={outcomes}
+              headlineOutcomeId={headlineOutcome.id}
             />
-          );
-        })}
-      </LineChart>
+          }
+        />
+        <Area
+          type="monotoneX"
+          dataKey={getChangeDataKey(headlineOutcome.id)}
+          stroke={toneUi.line}
+          strokeLinecap="round"
+          strokeWidth={3.25}
+          fill={`url(#${gradientId})`}
+          isAnimationActive
+          animationDuration={520}
+          animationEasing="ease-out"
+          dot={(dotProps: { cx?: number; cy?: number; index?: number }) => (
+            <HeadlineLiveDot
+              {...dotProps}
+              stroke={toneUi.line}
+              totalPoints={chartSeries.length}
+            />
+          )}
+          activeDot={{
+            r: 4,
+            strokeWidth: 0,
+            fill: toneUi.line,
+          }}
+        />
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }

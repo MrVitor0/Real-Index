@@ -11,16 +11,26 @@ import { cn } from "@/lib/utils";
 type NavbarBalanceChipProps = {
   initialBalance: NavbarBalance | null;
   className?: string;
+  liveState?: NavbarBalanceChipLiveState;
+};
+
+export type NavbarBalanceChipLiveState = {
+  balance: NavbarBalance | null;
+  status: "loading" | "success" | "error";
 };
 
 const positionsRoute = "/conta/posicoes" as Route;
 
-export function NavbarBalanceChip({
-  initialBalance,
+function NavbarBalanceChipContent({
+  balance,
+  status,
   className,
-}: NavbarBalanceChipProps) {
-  const { data, status } = useNavbarBalance(initialBalance);
-  const resolvedBalance = data ?? initialBalance;
+}: {
+  balance: NavbarBalance | null;
+  status: "loading" | "success" | "error";
+  className?: string;
+}) {
+  const resolvedBalance = balance;
 
   return (
     <Link
@@ -48,5 +58,43 @@ export function NavbarBalanceChip({
         </div>
       </div>
     </Link>
+  );
+}
+
+function PolledNavbarBalanceChip({
+  initialBalance,
+  className,
+}: Omit<NavbarBalanceChipProps, "liveState">) {
+  const { data, status } = useNavbarBalance(initialBalance);
+
+  return (
+    <NavbarBalanceChipContent
+      balance={data ?? initialBalance}
+      status={status}
+      className={className}
+    />
+  );
+}
+
+export function NavbarBalanceChip({
+  initialBalance,
+  className,
+  liveState,
+}: NavbarBalanceChipProps) {
+  if (!liveState) {
+    return (
+      <PolledNavbarBalanceChip
+        initialBalance={initialBalance}
+        className={className}
+      />
+    );
+  }
+
+  return (
+    <NavbarBalanceChipContent
+      balance={liveState.balance ?? initialBalance}
+      status={liveState.status}
+      className={className}
+    />
   );
 }

@@ -8,6 +8,7 @@ import type {
   RadarForecastPreviewRequest,
   RadarForecastPreviewResponse,
 } from "@/features/market-detail/contracts/radar-market-detail";
+import { RADAR_FORECAST_CLOSE_ALL_CREDITS_INPUT } from "@/features/market-detail/contracts/radar-market-detail";
 import type { NavbarBalance } from "@/features/account/contracts/navbar-balance";
 import {
   formatCredits,
@@ -424,14 +425,21 @@ function resolveOperationPreview(input: {
 }) {
   const credits = parseCreditsInput(input.request.creditsInput);
   const currentPosition = getForecastPosition(input.portfolio, input.market.id);
+  const shouldCloseAll =
+    input.request.mode === "exit" &&
+    input.request.creditsInput === RADAR_FORECAST_CLOSE_ALL_CREDITS_INPUT;
 
   if (input.request.mode === "exit") {
     return previewForecastExit({
       portfolio: input.portfolio,
       market: input.market,
-      plan: {
-        creditsToRelease: credits,
-      },
+      plan: shouldCloseAll
+        ? {
+            closeAll: true,
+          }
+        : {
+            creditsToRelease: credits,
+          },
     });
   }
 
@@ -459,14 +467,21 @@ function resolveOperationExecution(input: {
 }) {
   const credits = parseCreditsInput(input.request.creditsInput);
   const currentPosition = getForecastPosition(input.portfolio, input.market.id);
+  const shouldCloseAll =
+    input.request.mode === "exit" &&
+    input.request.creditsInput === RADAR_FORECAST_CLOSE_ALL_CREDITS_INPUT;
 
   if (input.request.mode === "exit") {
     return executeForecastExit({
       portfolio: input.portfolio,
       market: input.market,
-      plan: {
-        creditsToRelease: credits,
-      },
+      plan: shouldCloseAll
+        ? {
+            closeAll: true,
+          }
+        : {
+            creditsToRelease: credits,
+          },
     });
   }
 

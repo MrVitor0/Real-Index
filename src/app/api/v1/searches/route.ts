@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { homeSearchesResponseSchema } from "@/features/home/contracts/searches";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import { searchHomeMarkets } from "@/server/markets/catalog";
 
@@ -19,6 +20,16 @@ function parseSearchLimit(rawLimit: string | null) {
 
 export async function GET(request: Request) {
   const context = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context,
+    resource: "searches",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   const requestUrl = new URL(request.url);
   const query = requestUrl.searchParams.get("q")?.trim() ?? "";
   const limit = parseSearchLimit(requestUrl.searchParams.get("limit"));

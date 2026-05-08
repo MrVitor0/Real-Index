@@ -65,6 +65,7 @@ export const featuredMarketSchema = z.object({
   headlineOutcomeId: z.string(),
   volumeLabel: z.string(),
   resolutionLabel: z.string(),
+  participantCount: z.number().int().nonnegative(),
   outcomes: z.array(featuredOutcomeSchema),
   comments: z.array(featuredCommentSchema),
   chart: featuredChartSchema,
@@ -123,6 +124,7 @@ export const openMarketsSchema = z.object({
 export const homeFeedDataSchema = z.object({
   navigation: homeNavigationSchema,
   featuredMarket: featuredMarketSchema,
+  featuredMarkets: z.array(featuredMarketSchema).min(1),
   sidebar: homeSidebarSchema,
   openMarkets: openMarketsSchema,
 });

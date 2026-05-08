@@ -4,6 +4,7 @@ import {
   radarForecastPreviewRequestSchema,
   radarForecastPreviewResponseSchema,
 } from "@/features/market-detail/contracts/radar-market-detail";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import { previewViewerForecastOperation } from "@/server/markets/trading";
 
@@ -15,6 +16,16 @@ type RouteProps = {
 
 export async function POST(request: Request, { params }: RouteProps) {
   const context = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context,
+    presetName: "mutation",
+    resource: "radar-forecast-preview",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   if (!context.viewer) {
     return NextResponse.json(

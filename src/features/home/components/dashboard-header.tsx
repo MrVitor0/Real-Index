@@ -3,7 +3,14 @@
 import { useState } from "react";
 import type { Route } from "next";
 import Link from "next/link";
-import { BarChart3, CircleHelp, Menu, Settings } from "lucide-react";
+import {
+  BarChart3,
+  CircleHelp,
+  Gift,
+  LockKeyhole,
+  Menu,
+  Settings,
+} from "lucide-react";
 import {
   SignedIn,
   SignedOut,
@@ -28,6 +35,7 @@ import type { NavbarBalance } from "@/features/account/contracts/navbar-balance"
 import { HomeSearches } from "@/features/home/components/home-searches";
 import { cn } from "@/lib/utils";
 import type { HomeNavigation } from "@/features/home/contracts/home-feed";
+import type { NavbarBalanceChipLiveState } from "@/features/account/components/navbar-balance-chip";
 
 type DashboardHeaderProps = {
   navigation: HomeNavigation;
@@ -36,12 +44,16 @@ type DashboardHeaderProps = {
   authEnabled: boolean;
   authStatus: "anonymous" | "authenticated";
   initialBalance: NavbarBalance | null;
+  liveBalanceState?: NavbarBalanceChipLiveState;
 };
 
 const loginRoute = "/login" as Route;
 const signUpRoute = "/cadastro" as Route;
 const accountRoute = "/conta" as Route;
 const createMarketRoute = "/conta/mercados/novo" as Route;
+const createMarketSignUpRoute =
+  "/cadastro?next=%2Fconta%2Fmercados%2Fnovo" as Route;
+const marketplaceRoute = "/marketplace" as Route;
 const positionsRoute = "/conta/posicoes" as Route;
 const userButtonLocalization = {
   ...authLocalization,
@@ -55,6 +67,7 @@ export function DashboardHeader({
   authEnabled,
   authStatus,
   initialBalance,
+  liveBalanceState,
 }: DashboardHeaderProps) {
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -81,7 +94,7 @@ export function DashboardHeader({
 
   return (
     <header className="surface-noise sticky top-0 z-40 border-b border-white/6 bg-market-panel/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-3 px-4 py-3 md:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-470 flex-col gap-3 px-4 py-3 md:px-6 lg:px-8">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto]">
           <div className="flex min-w-0 items-center gap-3">
             <Link
@@ -110,21 +123,64 @@ export function DashboardHeader({
           <div className="flex items-center justify-end gap-2 justify-self-end">
             {authEnabled ? (
               <>
+                <SignedIn>
+                  <Link
+                    href={createMarketRoute}
+                    className={buttonVariants({
+                      size: "sm",
+                      className: "hidden h-10 rounded-xl px-4 xl:inline-flex",
+                    })}
+                  >
+                    Criar novo Mercado
+                  </Link>
+                </SignedIn>
+
                 <SignedOut>
                   <Link
-                    href={loginRoute}
+                    href={createMarketSignUpRoute}
                     className={buttonVariants({
                       variant: "outline",
                       className:
-                        "h-10 rounded-xl border-white/8 bg-white/4 px-4 text-white/76 hover:bg-white/8 hover:text-white",
+                        "hidden h-10 rounded-xl border-white/8 bg-white/4 px-4 text-white/72 hover:bg-white/8 hover:text-white xl:inline-flex",
                     })}
                   >
-                    Entrar
+                    <LockKeyhole className="h-4 w-4" />
+                    Criar novo Mercado
+                  </Link>
+                </SignedOut>
+              </>
+            ) : null}
+
+            <Link
+              href={marketplaceRoute}
+              className={buttonVariants({
+                variant: "outline",
+                className:
+                  "hidden h-10 rounded-xl border-white/8 bg-white/4 px-4 text-white/76 hover:bg-white/8 hover:text-white xl:inline-flex",
+              })}
+            >
+              Marketplace
+            </Link>
+
+            {authEnabled ? (
+              <>
+                <SignedOut>
+                  <Link
+                    href={signUpRoute}
+                    className={buttonVariants({
+                      size: "sm",
+                      className: "h-10 rounded-xl px-4",
+                    })}
+                  >
+                    Criar Conta
                   </Link>
                 </SignedOut>
 
                 <SignedIn>
-                  <NavbarBalanceChip initialBalance={initialBalance} />
+                  <NavbarBalanceChip
+                    initialBalance={initialBalance}
+                    liveState={liveBalanceState}
+                  />
                   <UserButton
                     size="icon"
                     className="hidden cursor-pointer sm:flex"
@@ -142,6 +198,12 @@ export function DashboardHeader({
                         href: positionsRoute,
                         icon: <BarChart3 className="h-4 w-4" />,
                         label: "Minhas Posições",
+                        signedIn: true,
+                      },
+                      {
+                        href: marketplaceRoute,
+                        icon: <Gift className="h-4 w-4" />,
+                        label: "Marketplace",
                         signedIn: true,
                       },
                     ]}
@@ -225,6 +287,8 @@ export function DashboardHeader({
                           >
                             {link.id === "documentacao" ? (
                               <CircleHelp className="h-4 w-4 text-market-info" />
+                            ) : link.id === "marketplace" ? (
+                              <Gift className="h-4 w-4 text-primary" />
                             ) : null}
                             <span>{link.label}</span>
                           </a>
@@ -265,7 +329,7 @@ export function DashboardHeader({
                     <>
                       <SignedOut>
                         <Link
-                          href={loginRoute}
+                          href={createMarketSignUpRoute}
                           onClick={() => setIsMenuOpen(false)}
                           className={buttonVariants({
                             variant: "outline",
@@ -273,7 +337,8 @@ export function DashboardHeader({
                               "h-11 rounded-xl border-white/8 bg-white/4 px-4 text-white/76 hover:bg-white/8 hover:text-white",
                           })}
                         >
-                          Entrar
+                          <LockKeyhole className="h-4 w-4" />
+                          Criar novo Mercado
                         </Link>
                         <Link
                           href={signUpRoute}
@@ -283,7 +348,18 @@ export function DashboardHeader({
                             className: "h-11 rounded-xl px-4",
                           })}
                         >
-                          Criar conta
+                          Criar Conta
+                        </Link>
+                        <Link
+                          href={loginRoute}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={buttonVariants({
+                            variant: "outline",
+                            className:
+                              "h-11 rounded-xl border-white/8 bg-white/4 px-4 text-white/76 hover:bg-white/8 hover:text-white",
+                          })}
+                        >
+                          Entrar
                         </Link>
                       </SignedOut>
 
@@ -314,6 +390,16 @@ export function DashboardHeader({
                   ) : (
                     <>
                       <Link
+                        href={signUpRoute}
+                        onClick={() => setIsMenuOpen(false)}
+                        className={buttonVariants({
+                          size: "sm",
+                          className: "h-11 rounded-xl px-4",
+                        })}
+                      >
+                        Criar Conta
+                      </Link>
+                      <Link
                         href={loginRoute}
                         onClick={() => setIsMenuOpen(false)}
                         className={buttonVariants({
@@ -323,16 +409,6 @@ export function DashboardHeader({
                         })}
                       >
                         Entrar
-                      </Link>
-                      <Link
-                        href={signUpRoute}
-                        onClick={() => setIsMenuOpen(false)}
-                        className={buttonVariants({
-                          size: "sm",
-                          className: "h-11 rounded-xl px-4",
-                        })}
-                      >
-                        Criar conta
                       </Link>
                     </>
                   )}

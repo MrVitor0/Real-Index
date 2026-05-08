@@ -6,6 +6,7 @@ import {
   recentActivityResponseSchema,
 } from "@/features/home/contracts/recent-activity";
 import { createRouteContext } from "@/server/api/route-context";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { getRecentActivityFeed } from "@/server/activity/log";
 
 const recentEventsQuerySchema = z.object({
@@ -15,6 +16,15 @@ const recentEventsQuerySchema = z.object({
 
 export async function GET(request: Request) {
   const context = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context,
+    resource: "recent-events",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   try {
     const url = new URL(request.url);

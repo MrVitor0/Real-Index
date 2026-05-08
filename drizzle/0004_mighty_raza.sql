@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "marketplace_redemptions_profile_reward_unique_idx" ON "marketplace_redemptions" USING btree ("profile_id","reward_id");

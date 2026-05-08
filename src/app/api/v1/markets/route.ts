@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 
 import { createPredictionMarketResponseSchema } from "@/features/markets/contracts/create-market";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import { createPredictionMarket } from "@/server/markets/catalog";
 
 export async function POST(request: Request) {
   const context = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context,
+    presetName: "mutation",
+    resource: "markets:create",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   if (!context.viewer) {
     return NextResponse.json(

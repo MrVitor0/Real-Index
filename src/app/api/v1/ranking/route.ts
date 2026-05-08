@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError, z } from "zod";
 
 import { participantRankingResponseSchema } from "@/features/home/contracts/participant-ranking";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import { getParticipantRanking } from "@/server/home/participant-ranking";
 
@@ -11,6 +12,15 @@ const rankingQuerySchema = z.object({
 
 export async function GET(request: Request) {
   const context = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context,
+    resource: "ranking",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   try {
     const url = new URL(request.url);

@@ -2,9 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recentActivityResponseSchema } from "@/features/home/contracts/recent-activity";
 import { getRecentActivityFeed } from "@/server/activity/log";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 
 import { GET } from "./route";
+
+vi.mock("@/server/api/rate-limit", () => ({
+  enforceRateLimit: vi.fn(),
+}));
 
 vi.mock("@/server/api/route-context", () => ({
   createRouteContext: vi.fn(),
@@ -15,11 +20,13 @@ vi.mock("@/server/activity/log", () => ({
 }));
 
 const mockedCreateRouteContext = vi.mocked(createRouteContext);
+const mockedEnforceRateLimit = vi.mocked(enforceRateLimit);
 const mockedGetRecentActivityFeed = vi.mocked(getRecentActivityFeed);
 
 describe("GET /api/v1/recent-events", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mockedEnforceRateLimit.mockResolvedValue(null);
     mockedCreateRouteContext.mockResolvedValue({
       requestId: "req-events",
       auth: {

@@ -9,11 +9,11 @@ export function HomeFooter() {
             Projeto open source
           </p>
           <p className="text-sm leading-6 text-white/68">
-            {siteConfig.name} e uma plataforma open source de observabilidade e
-            forecasting comunitario com IA e sinais coletivos, criada para
-            entretenimento, experimentacao e cultura de internet. Nao e casa de
+            {siteConfig.name} é uma plataforma open source de observabilidade e
+            forecasting comunitário com IA e sinais coletivos, criada para
+            entretenimento, experimentação e cultura de internet. Não é casa de
             apostas, cassino, exchange ou plataforma financeira, e os REAL
-            Credits sao 100% virtuais, sem saque, deposito ou conversao em
+            Credits são 100% virtuais, sem saque, depósito ou conversão em
             dinheiro.
           </p>
         </div>

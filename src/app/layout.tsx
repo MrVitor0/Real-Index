@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 
+import { ForecastOrderDialogProvider } from "@/components/providers/forecast-order-dialog-provider";
 import { NeonAuthProvider } from "@/components/providers/neon-auth-provider";
 import { siteConfig } from "@/config/site";
 import { getEnvironmentStatus } from "@/lib/env";
@@ -123,17 +125,21 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans text-foreground">
-        <script
+        <Script
+          id="real-index-structured-data"
+          strategy="beforeInteractive"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData),
           }}
         />
-        {hasNeonAuth ? (
-          <NeonAuthProvider>{children}</NeonAuthProvider>
-        ) : (
-          children
-        )}
+        <ForecastOrderDialogProvider>
+          {hasNeonAuth ? (
+            <NeonAuthProvider>{children}</NeonAuthProvider>
+          ) : (
+            children
+          )}
+        </ForecastOrderDialogProvider>
       </body>
     </html>
   );

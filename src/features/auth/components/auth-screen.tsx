@@ -291,6 +291,10 @@ export async function AuthScreen({ view }: AuthScreenProps) {
                   description: "text-sm leading-7 text-white/58",
                   content:
                     "flex h-full flex-col justify-between gap-8 px-8 pb-8 md:px-10 md:pb-10",
+                  button:
+                    view === "sign-up"
+                      ? "min-h-14 text-base font-semibold"
+                      : undefined,
                   continueWith: "text-white/42",
                   separator: "bg-white/10",
                   footer: "text-white/48",

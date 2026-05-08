@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { radarMarketDetailSchema } from "@/features/market-detail/contracts/radar-market-detail";
 import { recordPlatformActivity } from "@/server/activity/log";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import {
   getPredictionEventIdBySlug,
@@ -17,6 +18,15 @@ type RouteProps = {
 
 export async function GET(request: Request, { params }: RouteProps) {
   const context = await createRouteContext(request);
+  const rateLimitResponse = await enforceRateLimit({
+    request,
+    context,
+    resource: "radar-detail",
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   try {
     const { marketId } = await params;

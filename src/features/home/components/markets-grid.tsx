@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+
+import { useForecastOrderDialog } from "@/components/providers/forecast-order-dialog-provider";
 import { Card, CardContent } from "@/components/ui/card";
 import { useHorizontalDragScroll } from "@/features/home/hooks/use-horizontal-drag-scroll";
 import type {
@@ -19,6 +21,7 @@ type MarketsGridProps = {
 };
 
 function MarketCardItem({ market }: { market: MarketCard }) {
+  const { openForecastOrder } = useForecastOrderDialog();
   const toneUi = getToneUi(market.tone);
   const baseTagLabel = "Tudo";
   const primaryTag =
@@ -28,10 +31,22 @@ function MarketCardItem({ market }: { market: MarketCard }) {
   const progressWidth = `${Math.max(market.probability, 6)}%`;
   const marketDetailHref = `/radar/${market.id}` as Route;
 
+  const openEntryOrder = (position: "yes" | "no") => {
+    openForecastOrder({
+      marketId: market.id,
+      initialMode: "entry",
+      initialPosition: position,
+      executionRedirectRoute: null,
+    });
+  };
+
   return (
-    <Link href={marketDetailHref} className="block h-full">
-      <Card className="code-surface group h-full border-white/7 bg-market-surface/94 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.95)] transition-all duration-200 hover:-translate-y-1 hover:border-white/12 hover:shadow-[0_30px_85px_-40px_rgba(0,0,0,0.98)]">
-        <CardContent className="flex h-full flex-col gap-4 p-4">
+    <Card className="code-surface group h-full cursor-pointer border-white/7 bg-market-surface/94 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.95)] transition-all duration-200 hover:-translate-y-1 hover:border-white/12 hover:shadow-[0_30px_85px_-40px_rgba(0,0,0,0.98)]">
+      <CardContent className="flex h-full flex-col gap-4 p-4">
+        <Link
+          href={marketDetailHref}
+          className="flex min-h-0 flex-1 cursor-pointer flex-col gap-4 rounded-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
+        >
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div
@@ -68,21 +83,27 @@ function MarketCardItem({ market }: { market: MarketCard }) {
                 style={{ width: progressWidth }}
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div
-                className={`rounded-2xl border px-3 py-2 text-center text-sm font-medium ${toneUi.soft}`}
-              >
-                {market.yesPriceLabel}
-              </div>
-              <div className="rounded-2xl border border-white/8 bg-white/3 px-3 py-2 text-center text-sm font-medium text-white/76">
-                {market.noPriceLabel}
-              </div>
-            </div>
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+        </Link>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => openEntryOrder("yes")}
+            className={`cursor-pointer rounded-2xl border px-3 py-2 text-center text-sm font-medium transition-colors hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary/20 ${toneUi.soft}`}
+          >
+            {market.yesPriceLabel}
+          </button>
+          <button
+            type="button"
+            onClick={() => openEntryOrder("no")}
+            className="cursor-pointer rounded-2xl border border-white/8 bg-white/3 px-3 py-2 text-center text-sm font-medium text-white/76 transition-colors hover:bg-white/6 hover:text-white focus-visible:ring-2 focus-visible:ring-primary/20"
+          >
+            {market.noPriceLabel}
+          </button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

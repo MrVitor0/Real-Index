@@ -73,6 +73,8 @@ export const radarForecastPositionSchema = z.enum(["yes", "no"]);
 
 export const radarForecastActionModeSchema = z.enum(["entry", "exit"]);
 
+export const RADAR_FORECAST_CLOSE_ALL_CREDITS_INPUT = "__ALL__";
+
 export const radarForecastAccountPositionSchema = z.object({
   side: radarForecastPositionSchema,
   sideLabel: z.string(),

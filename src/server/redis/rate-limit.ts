@@ -10,6 +10,11 @@ export const rateLimitPresets = {
     limit: 60,
     window: "1 m",
   },
+  stream: {
+    prefix: "stream",
+    limit: 20,
+    window: "1 m",
+  },
   authAttempt: {
     prefix: "auth-attempt",
     limit: 5,

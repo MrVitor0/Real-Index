@@ -1,6 +1,7 @@
 "use client";
 
 import type { CommunityMetricItem } from "@/features/home/contracts/community-metrics";
+import type { RecentActivityItem } from "@/features/home/contracts/recent-activity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getToneUi } from "@/features/home/lib/presentation";
 import { useCommunityMetrics } from "@/features/home/hooks/use-community-metrics";
@@ -32,12 +33,31 @@ const fallbackMetrics: CommunityMetricItem[] = [
   },
 ];
 
-export function SidebarPanel() {
-  const { data: metricsData, status: metricsStatus } = useCommunityMetrics();
-  const activityState = useRecentActivity(3);
-  const activityItems = activityState.data?.data.items.slice(0, 3) ?? [];
-  const metricItems = metricsData?.data.items ?? fallbackMetrics;
-  const metricsTitle = metricsData?.data.title ?? "Metricas";
+type CardStatus = "loading" | "success" | "error";
+
+type SidebarPanelProps = {
+  liveData?: {
+    activityItems: RecentActivityItem[];
+    activityStatus: CardStatus;
+    metricItems: CommunityMetricItem[];
+    metricsStatus: CardStatus;
+    metricsTitle: string;
+  };
+};
+
+function SidebarPanelContent({
+  activityItems,
+  activityStatus,
+  metricItems,
+  metricsStatus,
+  metricsTitle,
+}: {
+  activityItems: RecentActivityItem[];
+  activityStatus: CardStatus;
+  metricItems: CommunityMetricItem[];
+  metricsStatus: CardStatus;
+  metricsTitle: string;
+}) {
   const metricsStatusLabel =
     metricsStatus === "success"
       ? "live"
@@ -49,7 +69,7 @@ export function SidebarPanel() {
     <aside className="grid w-full gap-3.5 xl:h-full xl:grid-rows-[auto_minmax(0,1fr)]">
       <ActivityFeedCard
         items={activityItems}
-        status={activityState.status}
+        status={activityStatus}
         variant="stream"
       />
 
@@ -90,5 +110,36 @@ export function SidebarPanel() {
         </CardContent>
       </Card>
     </aside>
+  );
+}
+
+function PolledSidebarPanel() {
+  const { data: metricsData, status: metricsStatus } = useCommunityMetrics();
+  const activityState = useRecentActivity(3);
+
+  return (
+    <SidebarPanelContent
+      activityItems={activityState.data?.data.items.slice(0, 3) ?? []}
+      activityStatus={activityState.status}
+      metricItems={metricsData?.data.items ?? fallbackMetrics}
+      metricsStatus={metricsStatus}
+      metricsTitle={metricsData?.data.title ?? "Metricas"}
+    />
+  );
+}
+
+export function SidebarPanel({ liveData }: SidebarPanelProps) {
+  if (!liveData) {
+    return <PolledSidebarPanel />;
+  }
+
+  return (
+    <SidebarPanelContent
+      activityItems={liveData.activityItems}
+      activityStatus={liveData.activityStatus}
+      metricItems={liveData.metricItems}
+      metricsStatus={liveData.metricsStatus}
+      metricsTitle={liveData.metricsTitle}
+    />
   );
 }

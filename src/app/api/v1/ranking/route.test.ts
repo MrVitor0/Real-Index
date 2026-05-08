@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { participantRankingResponseSchema } from "@/features/home/contracts/participant-ranking";
+import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import { getParticipantRanking } from "@/server/home/participant-ranking";
 
 import { GET } from "./route";
+
+vi.mock("@/server/api/rate-limit", () => ({
+  enforceRateLimit: vi.fn(),
+}));
 
 vi.mock("@/server/api/route-context", () => ({
   createRouteContext: vi.fn(),
@@ -15,11 +20,13 @@ vi.mock("@/server/home/participant-ranking", () => ({
 }));
 
 const mockedCreateRouteContext = vi.mocked(createRouteContext);
+const mockedEnforceRateLimit = vi.mocked(enforceRateLimit);
 const mockedGetParticipantRanking = vi.mocked(getParticipantRanking);
 
 describe("GET /api/v1/ranking", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mockedEnforceRateLimit.mockResolvedValue(null);
     mockedCreateRouteContext.mockResolvedValue({
       requestId: "req-ranking",
       auth: {

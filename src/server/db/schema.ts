@@ -48,6 +48,11 @@ export const platformActivityTypeEnum = pgEnum("platform_activity_type", [
   "forecast_flip",
 ]);
 
+export const marketplaceRedemptionStatusEnum = pgEnum(
+  "marketplace_redemption_status",
+  ["pending", "fulfilled", "cancelled"],
+);
+
 export const profiles = pgTable(
   "profiles",
   {
@@ -303,6 +308,69 @@ export const platformActivityLogs = pgTable(
   ],
 );
 
+export const marketplaceRewards = pgTable(
+  "marketplace_rewards",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 140 }).notNull(),
+    title: varchar("title", { length: 140 }).notNull(),
+    subtitle: text("subtitle").notNull(),
+    backgroundImageUrl: text("background_image_url").notNull(),
+    creditCost: integer("credit_cost").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("marketplace_rewards_slug_idx").on(table.slug),
+    index("marketplace_rewards_active_sort_idx").on(
+      table.isActive,
+      table.sortOrder,
+    ),
+  ],
+);
+
+export const marketplaceRedemptions = pgTable(
+  "marketplace_redemptions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    profileId: uuid("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    rewardId: uuid("reward_id")
+      .notNull()
+      .references(() => marketplaceRewards.id, { onDelete: "restrict" }),
+    rewardTitleSnapshot: varchar("reward_title_snapshot", {
+      length: 140,
+    }).notNull(),
+    creditsSpent: integer("credits_spent").notNull(),
+    status: marketplaceRedemptionStatusEnum("status")
+      .notNull()
+      .default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("marketplace_redemptions_profile_reward_unique_idx").on(
+      table.profileId,
+      table.rewardId,
+    ),
+    index("marketplace_redemptions_profile_idx").on(table.profileId),
+    index("marketplace_redemptions_reward_idx").on(table.rewardId),
+    index("marketplace_redemptions_status_idx").on(table.status),
+    index("marketplace_redemptions_created_idx").on(table.createdAt),
+  ],
+);
+
 export type Profile = InferSelectModel<typeof profiles>;
 export type NewProfile = InferInsertModel<typeof profiles>;
 export type PredictionEvent = InferSelectModel<typeof predictionEvents>;
@@ -329,3 +397,13 @@ export type PlatformActivityLog = InferSelectModel<typeof platformActivityLogs>;
 export type NewPlatformActivityLog = InferInsertModel<
   typeof platformActivityLogs
 >;
+export type MarketplaceReward = InferSelectModel<typeof marketplaceRewards>;
+export type NewMarketplaceReward = InferInsertModel<typeof marketplaceRewards>;
+export type MarketplaceRedemption = InferSelectModel<
+  typeof marketplaceRedemptions
+>;
+export type NewMarketplaceRedemption = InferInsertModel<
+  typeof marketplaceRedemptions
+>;
+export type MarketplaceRedemptionStatus =
+  (typeof marketplaceRedemptionStatusEnum.enumValues)[number];

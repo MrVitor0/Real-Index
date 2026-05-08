@@ -37,6 +37,7 @@ const getBaseHomeFeedData = cache(async () => {
   return homeFeedDataSchema.parse({
     navigation,
     featuredMarket,
+    featuredMarkets: [featuredMarket],
     sidebar,
     openMarkets,
   });
@@ -44,13 +45,17 @@ const getBaseHomeFeedData = cache(async () => {
 
 export async function getHomeFeedData(now = new Date()) {
   const baseData = await getBaseHomeFeedData();
+  const featuredMarkets = baseData.featuredMarkets.map((market) =>
+    createFeaturedMarketServerSnapshot(market, now),
+  );
+  const featuredMarket =
+    featuredMarkets[0] ??
+    createFeaturedMarketServerSnapshot(baseData.featuredMarket, now);
 
   return homeFeedDataSchema.parse({
     ...baseData,
-    featuredMarket: createFeaturedMarketServerSnapshot(
-      baseData.featuredMarket,
-      now,
-    ),
+    featuredMarket,
+    featuredMarkets,
   });
 }
 
