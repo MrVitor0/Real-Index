@@ -1,0 +1,58 @@
+name: "Feature Request"
+description: Sugira uma nova funcionalidade ou melhoria.
+title: "[feat]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado pela sugestão! Para mudanças grandes, recomendamos discutir a ideia aqui antes de abrir um PR.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qual problema isso resolve?
+      description: Descreva o contexto ou dor que motivou a sugestão.
+      placeholder: "Atualmente é difícil fazer X porque Y..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solução proposta
+      description: Como você imagina que isso deveria funcionar?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Existe alguma outra forma de resolver o problema?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área do projeto
+      options:
+        - "UI / Frontend"
+        - "Backend / API"
+        - "Banco de dados / Schema"
+        - "Autenticação"
+        - "Gamificação / Forecasting"
+        - "Infraestrutura / DevOps"
+        - "Documentação"
+        - "Outro"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: Pesquisei nas issues existentes e não encontrei duplicata.
+          required: true
+        - label: Esta sugestão está alinhada com o roadmap e a proposta do projeto.
+          required: true

@@ -1,130 +1,163 @@
-# 🚧 REAL Severity Index — MVP Roadmap
+# REAL Severity Index
 
-## Initial Stack
+> Comunidade gamificada de forecasting para acompanhar lançamentos, incidentes e sinais em tecnologia.
 
-- Next.js 16 + App Router
-- TypeScript strict
-- Tailwind CSS v4
-- shadcn/ui
-- Neon PostgreSQL
-- Drizzle ORM
-- Upstash Redis
+O REAL Severity Index transforma sinais da comunidade em forecasts gamificados sobre lançamentos, incidentes, open source, IA e infraestrutura. A experiência usa **REAL Credits virtuais** para reputação e ranking — sem saque, sem depósito, sem compra de moeda e sem recompensa financeira de qualquer natureza.
 
-## Local Setup
-
-1. Run npm install
-2. Copy .env.example to .env
-3. Fill the Neon, Neon Auth, and Upstash credentials
-4. Run npm run dev
-
-## Neon Auth
-
-- Enable Auth in the Neon Console and copy the Auth URL to NEON_AUTH_BASE_URL.
-- Generate NEON_AUTH_COOKIE_SECRET with: node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
-- Google login can be enabled in Neon Auth with shared development credentials, then customized later in production.
-- The app now ships with ready-to-use routes for login, signup, and account: /login, /cadastro, and /conta.
-
-## Useful Commands
-
-- npm run check
-- npm run db:generate
-- npm run db:push
-- npm run db:studio
-
-## Phase 1 — Foundation & Authentication
-
-1. Setup frontend architecture (Next.js + Tailwind + shadcn)
-2. Setup backend architecture and database
-3. User authentication and account creation
-4. User profiles and public reputation pages
-5. Session management and protected routes
+Projeto open source feito pela e para a comunidade dev brasileira. 🇧🇷
 
 ---
 
-## Phase 2 — Core Gamification Systems
+## Stack
 
-7. Virtual currency system (REAL Points)
-8. XP and leveling system
-9. User ranking and leaderboard
-10. Badges and achievement system
-11. Daily streak and activity rewards
-12. Community reputation score
-
----
-
-## Phase 3 — Prediction Systems
-
-13. CRUD for prediction events
-14. Prediction categories and tags
-15. YES / NO prediction mechanics
-16. Community probability aggregation
-17. Prediction expiration and resolution system
-18. Historical prediction archive
-19. Prediction comments and discussion threads
+| Camada             | Tecnologia                  |
+| ------------------ | --------------------------- |
+| Framework          | Next.js 16 + App Router     |
+| Linguagem          | TypeScript (strict)         |
+| Estilo             | Tailwind CSS v4 + shadcn/ui |
+| Banco de dados     | Neon PostgreSQL             |
+| ORM                | Drizzle ORM                 |
+| Cache / Rate limit | Upstash Redis               |
+| Autenticação       | Neon Auth                   |
 
 ---
 
-## Phase 4 — Market Experience Layer
+## Pré-requisitos
 
-20. Prediction feed inspired by prediction markets
-21. Real-time odds/probability UI updates
-22. Trending and hot predictions
-23. Service risk status dashboard
-24. National alert visual system
-25. Incident timeline system
-26. Animated charts and market movement visuals
+- Node.js 20+
+- npm 10+
+- Conta no [Neon](https://neon.tech) (banco + auth)
+- Conta no [Upstash](https://upstash.com) (Redis)
 
 ---
 
-## Phase 5 — Community & Social Features
+## Setup local
 
-27. Follow users system
-28. Public activity feed
-29. Shareable prediction cards
-30. Discord integration
-31. Email alert subscriptions
-32. X/Twitter bot integration
-33. Real-time notifications system
+```bash
+# 1. Clone o repositório
+git clone https://github.com/MrVitor0/REAL-Severity-Index.git
+cd REAL-Severity-Index
 
----
+# 2. Instale as dependências
+npm install
 
-## Phase 6 — Security & Stability
+# 3. Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env com suas credenciais Neon e Upstash
 
-34. Anti-spam protections
-35. Bot detection system
-36. Rate limiting
-37. IP/device abuse prevention
-38. Prediction manipulation detection
-39. Audit logs and moderation tools
-40. Report system for abusive content
+# 4. Sincronize o schema no banco
+npm run db:push
 
----
+# 5. Suba o servidor de desenvolvimento
+npm run dev
+# Acesse: http://localhost:5180
+```
 
-## Phase 7 — AI & Automation
+### Configurando o Neon Auth
 
-41. X post monitoring engine
-42. AI mention detection
-43. Service/entity recognition system
-44. REAL Severity Score engine
-45. Automated incident creation
-46. AI-generated prediction suggestions
-47. Automated national alert generation
+1. Habilite Auth no Neon Console e copie a URL para `NEON_AUTH_BASE_URL`.
+2. Gere o cookie secret:
+   ```bash
+   node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
+   ```
+3. Login com Google pode ser habilitado direto no Neon Auth com credenciais de desenvolvimento compartilhadas.
 
 ---
 
-## Phase 8 — MVP Launch
+## Scripts disponíveis
 
-48. Landing page and branding polish
-49. Mobile responsiveness improvements
-50. SEO and OpenGraph optimization
-51. Public launch dashboard
-52. Contributor documentation
-53. Open source onboarding
-54. Production deployment
-55. Community launch 🚨
+| Comando               | Descrição                                |
+| --------------------- | ---------------------------------------- |
+| `npm run dev`         | Servidor de desenvolvimento (porta 5180) |
+| `npm run build`       | Build de produção                        |
+| `npm run start`       | Inicia o build de produção               |
+| `npm run check`       | Lint + typecheck                         |
+| `npm run lint`        | ESLint                                   |
+| `npm run typecheck`   | TypeScript sem emitir arquivos           |
+| `npm run test:unit`   | Testes unitários com Vitest              |
+| `npm run db:generate` | Gera as migrations a partir do schema    |
+| `npm run db:push`     | Aplica o schema direto no banco (dev)    |
+| `npm run db:migrate`  | Executa as migrations geradas            |
+| `npm run db:studio`   | Abre o Drizzle Studio                    |
 
-## Mission
+Antes de abrir PR, rode sempre:
 
-The Brazilian dev community must unite to preserve national technological stability against the operational risk posed by @acgfbr 🇧🇷⚠️
+```bash
+npm run check
+npm run test:unit
+```
 
-- ps: Video do lucas montano pra motivar vocês a codar: https://www.youtube.com/watch?v=T9V7EyB_B9w
+---
+
+## Estrutura do projeto
+
+```
+src/
+├── app/            # Rotas, layouts, API routes e metadata
+├── components/     # Componentes de UI reutilizáveis (shadcn + branding)
+├── config/         # Configurações estáticas (site, env)
+├── features/       # Módulos por domínio (account, home, marketplace, etc.)
+├── lib/            # Utilitários transversais e auth client/server
+└── server/         # Lógica de servidor: DB, Redis, services e testes
+```
+
+Cada feature em `src/features/` segue a estrutura:
+
+```
+features/<domínio>/
+├── components/   # Componentes React do domínio
+├── contracts/    # Tipos, schemas e interfaces públicas
+├── hooks/        # React hooks do domínio
+└── lib/          # Lógica pura e serviços do domínio
+```
+
+---
+
+## Contribuindo
+
+Contribuições são bem-vindas! Leia as diretrizes abaixo antes de abrir um PR.
+
+### Fluxo de contribuição
+
+1. **Fork** o repositório e crie uma branch a partir de `main`:
+   ```bash
+   git checkout -b feat/minha-feature
+   ```
+2. Faça suas alterações seguindo as convenções do projeto.
+3. Rode `npm run check` e `npm run test:unit` e garanta que passam.
+4. Commit com mensagens descritivas usando [Conventional Commits](https://www.conventionalcommits.org/):
+   ```
+   feat: adiciona sistema de badges
+   fix: corrige cálculo de XP no ranking
+   chore: atualiza dependências
+   ```
+5. Abra um **Pull Request** para `main` descrevendo o que foi feito e por quê.
+
+### Diretrizes de código
+
+- Siga o estilo existente: TypeScript strict, sem `any`, sem variáveis não utilizadas.
+- Prefira **Server Components** e use Client Components apenas quando houver interatividade real no cliente.
+- Novos endpoints em Route Handlers e Server Actions devem incluir validação de entrada e proteção de rate limit.
+- Extraia lógica de negócio para `lib/` ou `server/`, mantendo componentes focados em UI.
+- Não exponha segredos, tokens, dados pessoais ou informações sensíveis em nenhum arquivo do repositório.
+- REAL Credits são **virtuais** — nenhum código deve implicar valor financeiro real.
+
+### Reportando bugs e sugerindo features
+
+- Abra uma [Issue](https://github.com/MrVitor0/REAL-Severity-Index/issues) descrevendo o problema ou a ideia.
+- Para bugs, inclua: comportamento esperado, comportamento atual, passos para reproduzir e ambiente (OS, Node.js, browser).
+
+### O que não aceitar em PRs
+
+- Dados reais de usuários, seeds com PII ou fixtures com informação sensível.
+- Chaves de API, tokens ou secrets hardcoded.
+- Código que implique mecânica financeira real (saque, compra, payout).
+- Alterações de escopo sem discussão prévia em issue.
+
+---
+
+## Missão
+
+A comunidade dev brasileira unida para preservar a estabilidade tecnológica nacional. 🇧🇷⚠️
+
+> Vídeo do Lucas Montano pra motivar vocês a codar: https://www.youtube.com/watch?v=T9V7EyB_B9w
