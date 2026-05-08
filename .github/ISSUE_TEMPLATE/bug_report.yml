@@ -1,0 +1,76 @@
+name: "Bug Report"
+description: Reporte um comportamento inesperado ou erro no projeto.
+title: "[bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! Preencha as seções abaixo para nos ajudar a reproduzir e corrigir o problema.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição do problema
+      description: O que está acontecendo? Seja específico.
+      placeholder: "Ao clicar em X, a tela Y exibe Z em vez de W."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      description: Descreva o passo a passo para reproduzir o problema.
+      placeholder: |
+        1. Acesse a página '...'
+        2. Clique em '...'
+        3. Veja o erro
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+      description: O que deveria acontecer?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots ou logs
+      description: Se aplicável, adicione prints ou o output do console/terminal.
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Versão do Node.js
+      placeholder: "ex: 20.11.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Sistema operacional
+      placeholder: "ex: Windows 11, Ubuntu 22.04, macOS 14"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser (se for bug de UI)
+      placeholder: "ex: Chrome 124, Firefox 125"
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: Pesquisei nas issues existentes e não encontrei duplicata.
+          required: true
+        - label: Consigo reproduzir o problema com as etapas descritas acima.
+          required: true
