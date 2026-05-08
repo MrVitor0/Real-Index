@@ -1,18 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { useEffect, useEffectEvent, useState, type CSSProperties } from "react";
 import type { Route } from "next";
-import { Activity, Trophy } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Gift,
+  Trophy,
+} from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ParticipantRankingItem } from "@/features/home/contracts/participant-ranking";
 import type { RecentActivityItem } from "@/features/home/contracts/recent-activity";
 import { useParticipantRanking } from "@/features/home/hooks/use-participant-ranking";
 import { useRecentActivity } from "@/features/home/hooks/use-recent-activity";
-import { getInitials, getToneUi } from "@/features/home/lib/presentation";
+import { getToneUi } from "@/features/home/lib/presentation";
+import type { MarketplaceReward } from "@/features/marketplace/contracts/marketplace";
 import { cn } from "@/lib/utils";
 
 type CardStatus = "loading" | "success" | "error";
@@ -27,10 +34,13 @@ type LiveSidebarPanelProps = {
     rankingStatus: CardStatus;
     activityItems: RecentActivityItem[];
     activityStatus: CardStatus;
+    marketplaceRewards?: MarketplaceReward[];
   };
 };
 
 type ActivityFeedVariant = "default" | "stream";
+const marketplaceRoute = "/marketplace" as Route;
+const marketplaceCarouselIntervalMs = 4_500;
 
 function getLeaderboardTone(rank: number) {
   if (rank === 1) {
@@ -83,6 +93,258 @@ function formatCompactRankingCredits(value: string) {
   return value.replace(/REAL Credits?/i, "R.C");
 }
 
+function resolveMarketplaceSpotlight(input: {
+  leaderAvailableCredits: number;
+  rewards: MarketplaceReward[];
+}) {
+  const activeRewards = input.rewards.filter((reward) => reward.isActive);
+  const redeemableRewards = activeRewards.filter(
+    (reward) =>
+      !reward.isRedeemed && reward.creditCost <= input.leaderAvailableCredits,
+  );
+  const remainingRewards = activeRewards.filter(
+    (reward) =>
+      !redeemableRewards.some((candidate) => candidate.id === reward.id),
+  );
+  const items = [...redeemableRewards, ...remainingRewards];
+
+  return {
+    items,
+  };
+}
+
+function RankingListItem({
+  item,
+  championScore,
+  highlightLeader = false,
+}: {
+  item: ParticipantRankingItem;
+  championScore: number;
+  highlightLeader?: boolean;
+}) {
+  const toneUi = getToneUi(getLeaderboardTone(item.rank));
+  const progressWidth =
+    championScore > 0
+      ? `${Math.max(
+          (item.totalEquityCredits / championScore) * 100,
+          highlightLeader ? 100 : 14,
+        )}%`
+      : highlightLeader
+        ? "100%"
+        : "0%";
+  const valueLabel = formatCompactRankingCredits(item.totalEquityLabel);
+
+  return (
+    <div
+      className={cn(
+        "rounded-[20px] border px-3.5 py-3",
+        highlightLeader
+          ? "border-market-warning/18 bg-[linear-gradient(180deg,rgba(255,214,102,0.10),rgba(255,255,255,0.03))]"
+          : "border-white/8 bg-white/4",
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] border text-sm font-semibold",
+            highlightLeader
+              ? "border-market-warning/22 bg-market-warning/14 text-market-warning"
+              : toneUi.soft,
+          )}
+        >
+          {item.rank}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">
+                {item.displayName}
+              </p>
+              <p className="truncate text-[11px] uppercase tracking-[0.16em] text-white/30">
+                @{item.username}
+              </p>
+            </div>
+
+            <p
+              className={cn(
+                "shrink-0 whitespace-nowrap pt-0.5 text-right font-semibold leading-none text-white",
+                "text-sm",
+              )}
+            >
+              {valueLabel}
+            </p>
+          </div>
+
+          <div className="mt-2 h-1.5 rounded-full bg-white/6">
+            <div
+              className={cn(
+                "h-full rounded-full",
+                highlightLeader ? "bg-market-warning" : toneUi.dot,
+              )}
+              style={{ width: progressWidth }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MarketplaceSpotlightCard({
+  leader,
+  rewards,
+}: {
+  leader: ParticipantRankingItem;
+  rewards: MarketplaceReward[];
+}) {
+  const spotlight = resolveMarketplaceSpotlight({
+    leaderAvailableCredits: leader.availableCredits,
+    rewards,
+  });
+  const spotlightItems = spotlight.items;
+  const [activeItemIndex, setActiveItemIndex] = useState(0);
+  const resolvedActiveItemIndex =
+    spotlightItems.length > 0 ? activeItemIndex % spotlightItems.length : 0;
+  const activeItem = spotlightItems[resolvedActiveItemIndex] ?? null;
+
+  const moveToItem = (direction: -1 | 1) => {
+    if (spotlightItems.length < 2) {
+      return;
+    }
+
+    setActiveItemIndex((currentIndex) => {
+      const nextIndex =
+        (currentIndex + direction + spotlightItems.length) %
+        spotlightItems.length;
+
+      return nextIndex;
+    });
+  };
+
+  const rotateItems = useEffectEvent(() => {
+    moveToItem(1);
+  });
+
+  useEffect(() => {
+    if (spotlightItems.length < 2) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      rotateItems();
+    }, marketplaceCarouselIntervalMs);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [resolvedActiveItemIndex, spotlightItems.length]);
+
+  return (
+    <section className="relative overflow-hidden rounded-[22px] border border-sky-400/16 bg-[linear-gradient(180deg,rgba(56,189,248,0.14),rgba(255,255,255,0.04))] shadow-[0_26px_70px_-46px_rgba(56,189,248,0.45)]">
+      {activeItem ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-24"
+          style={{ backgroundImage: `url("${activeItem.backgroundImageUrl}")` }}
+        />
+      ) : null}
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,10,19,0.18),rgba(6,10,19,0.92)_48%,rgba(6,10,19,0.98)_100%)]" />
+
+      <div className="relative space-y-3 p-3.5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-100">
+              <Gift className="h-3.5 w-3.5" />
+              marketplace
+            </span>
+            {activeItem ? (
+              <p className="mt-3 text-sm font-semibold text-white">
+                {activeItem.title}
+              </p>
+            ) : null}
+            <p className="mt-1 truncate font-mono text-[10px] uppercase tracking-[0.18em] text-white/34">
+              Visite o marketplace
+            </p>
+          </div>
+
+          {spotlightItems.length > 1 ? (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => moveToItem(-1)}
+                aria-label="Mostrar item anterior do marketplace"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => moveToItem(1)}
+                aria-label="Mostrar proximo item do marketplace"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        {activeItem ? (
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <p className="line-clamp-2 min-w-0 text-sm leading-5 text-white/62">
+                {activeItem.subtitle}
+              </p>
+
+              <span className="shrink-0 rounded-full border border-white/10 bg-white/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+                {formatCompactRankingCredits(activeItem.creditCostLabel)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-[18px] border border-dashed border-white/12 bg-white/3 px-3 py-4 text-sm leading-6 text-white/54">
+            O marketplace ainda nao tem perks suficientes para montar esta
+            vitrine.
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5">
+            {spotlightItems.length > 1 ? (
+              spotlightItems.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveItemIndex(index)}
+                  aria-label={`Mostrar item ${index + 1} do marketplace`}
+                  className={cn(
+                    "h-2 rounded-full transition-all",
+                    index === resolvedActiveItemIndex
+                      ? "w-6 bg-sky-300"
+                      : "w-2 bg-white/22 hover:bg-white/40",
+                  )}
+                />
+              ))
+            ) : (
+              <span className="text-[10px] uppercase tracking-[0.16em] text-white/28">
+                cta live
+              </span>
+            )}
+          </div>
+
+          <Link
+            href={marketplaceRoute}
+            className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-100 transition-colors hover:bg-sky-400/18"
+          >
+            abrir marketplace
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function RankingCard({
   items,
   status,
@@ -108,15 +370,10 @@ export function RankingCard({
       <CardHeader className="px-4 pb-2.5 pt-3.5">
         <CardTitle className="flex items-center justify-between gap-3 text-white">
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[color:var(--market-warning)]/20 bg-[color:var(--market-warning)]/12 text-[color:var(--market-warning)]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-2xl border border-market-warning/20 bg-market-warning/12 text-market-warning">
               <Trophy className="h-4.5 w-4.5" />
             </span>
-            <div>
-              <p className="text-base font-semibold">Ranking live</p>
-              <p className="text-xs font-normal tracking-[0.16em] text-white/34 uppercase">
-                top 3 da rodada
-              </p>
-            </div>
+            <p className="text-base font-semibold">Ranking live</p>
           </div>
 
           <span className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-white/34">
@@ -127,74 +384,14 @@ export function RankingCard({
 
       <CardContent className="flex flex-1 flex-col gap-3 px-4 pb-4 pt-0">
         {champion ? (
-          <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.03))] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-[18px] border border-[color:var(--market-warning)]/22 bg-[color:var(--market-warning)]/14 text-lg font-semibold text-[color:var(--market-warning)]">
-                  1
-                </div>
-
-                <Avatar
-                  size="lg"
-                  className="border border-white/8 bg-white/6 shadow-lg shadow-black/20"
-                >
-                  <AvatarImage
-                    src={champion.avatarUrl ?? undefined}
-                    alt={champion.displayName}
-                  />
-                  <AvatarFallback className="bg-white/10 font-semibold text-white">
-                    {getInitials(champion.displayName)}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="min-w-0">
-                  <p className="truncate text-base font-semibold text-white">
-                    {champion.displayName}
-                  </p>
-                  <p className="truncate text-xs uppercase tracking-[0.16em] text-white/34">
-                    @{champion.username}
-                  </p>
-                </div>
-              </div>
-
-              <span className="rounded-full border border-[color:var(--market-warning)]/22 bg-[color:var(--market-warning)]/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--market-warning)]">
-                lider
-              </span>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/34">
-                  patrimonio total
-                </p>
-                <p className="mt-1 text-[1.9rem] font-semibold tracking-tight text-white">
-                  {champion.totalEquityLabel}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs text-white/54">
-                <div className="rounded-[18px] border border-white/8 bg-white/4 px-3 py-2.5">
-                  <p className="uppercase tracking-[0.16em] text-white/28">
-                    lucro
-                  </p>
-                  <p className="mt-1 whitespace-nowrap text-sm font-semibold text-white">
-                    {formatCompactRankingCredits(champion.realizedDeltaLabel)}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-white/8 bg-white/4 px-3 py-2.5">
-                  <p className="uppercase tracking-[0.16em] text-white/28">
-                    posicoes
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {champion.openPositions}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <RankingListItem
+            item={champion}
+            championScore={championScore}
+            highlightLeader
+          />
         ) : status === "loading" ? (
           <div className="space-y-3">
-            <Skeleton className="h-40 rounded-[24px] bg-white/6" />
+            <Skeleton className="h-21 rounded-[20px] bg-white/6" />
           </div>
         ) : (
           <div className="rounded-[24px] border border-white/8 bg-white/4 px-4 py-8 text-center text-sm text-white/54">
@@ -204,55 +401,13 @@ export function RankingCard({
 
         <div className="mt-auto grid gap-2.5">
           {contenders.length > 0
-            ? contenders.map((item) => {
-                const toneUi = getToneUi(getLeaderboardTone(item.rank));
-                const progressWidth =
-                  championScore > 0
-                    ? `${Math.max((item.totalEquityCredits / championScore) * 100, 14)}%`
-                    : "0%";
-
-                return (
-                  <div
-                    key={item.profileId}
-                    className="rounded-[20px] border border-white/8 bg-white/4 px-3.5 py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] border text-sm font-semibold",
-                          toneUi.soft,
-                        )}
-                      >
-                        {item.rank}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-white">
-                              {item.displayName}
-                            </p>
-                            <p className="truncate text-[11px] uppercase tracking-[0.16em] text-white/30">
-                              @{item.username}
-                            </p>
-                          </div>
-
-                          <p className="whitespace-nowrap text-sm font-semibold text-white">
-                            {formatCompactRankingCredits(item.totalEquityLabel)}
-                          </p>
-                        </div>
-
-                        <div className="mt-2 h-1.5 rounded-full bg-white/6">
-                          <div
-                            className={cn("h-full rounded-full", toneUi.dot)}
-                            style={{ width: progressWidth }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+            ? contenders.map((item) => (
+                <RankingListItem
+                  key={item.profileId}
+                  item={item}
+                  championScore={championScore}
+                />
+              ))
             : champion && status !== "loading"
               ? null
               : status === "loading"
@@ -294,8 +449,8 @@ export function ActivityFeedCard({
   const activityViewport =
     trackItems.length > 0 ? (
       <div className={viewportClassName}>
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-gradient-to-b from-[color:var(--market-surface)] via-[color:var(--market-surface)]/84 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-[color:var(--market-surface)] via-[color:var(--market-surface)]/84 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-linear-to-b from-market-surface via-(--market-surface)/84 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-linear-to-t from-market-surface via-(--market-surface)/84 to-transparent" />
 
         <div
           className={cn(
@@ -475,6 +630,7 @@ function LiveSidebarPanelContent({
   rankingStatus,
   activityItems,
   activityStatus,
+  marketplaceRewards = [],
 }: {
   showActivity: boolean;
   className?: string;
@@ -484,14 +640,33 @@ function LiveSidebarPanelContent({
   rankingStatus: CardStatus;
   activityItems: RecentActivityItem[];
   activityStatus: CardStatus;
+  marketplaceRewards?: MarketplaceReward[];
 }) {
+  const leader = rankingItems[0] ?? null;
+
   return (
-    <aside className={cn("grid gap-3.5", className)}>
-      <RankingCard
-        items={rankingItems}
-        status={rankingStatus}
-        className={rankingClassName}
-      />
+    <aside
+      className={cn(
+        "grid min-w-0 w-full gap-3.5",
+        !showActivity && "xl:h-full xl:grid-rows-[minmax(0,1fr)_auto]",
+        className,
+      )}
+    >
+      <div className={cn("min-w-0", !showActivity && "xl:min-h-0")}>
+        <RankingCard
+          items={rankingItems}
+          status={rankingStatus}
+          className={cn(!showActivity && "xl:h-full", rankingClassName)}
+        />
+      </div>
+      {leader ? (
+        <MarketplaceSpotlightCard
+          leader={leader}
+          rewards={marketplaceRewards}
+        />
+      ) : rankingStatus === "loading" ? (
+        <Skeleton className="h-47 rounded-[22px] bg-white/6" />
+      ) : null}
       {showActivity ? (
         <ActivityFeedCard
           items={activityItems}
@@ -517,6 +692,7 @@ function PolledLiveSidebarPanel(
       rankingStatus={rankingState.status}
       activityItems={activityState.data?.data.items.slice(0, 3) ?? []}
       activityStatus={activityState.status}
+      marketplaceRewards={[]}
     />
   );
 }
@@ -537,6 +713,7 @@ export function LiveSidebarPanel({
       rankingStatus={liveData.rankingStatus}
       activityItems={liveData.activityItems}
       activityStatus={liveData.activityStatus}
+      marketplaceRewards={liveData.marketplaceRewards ?? []}
     />
   );
 }

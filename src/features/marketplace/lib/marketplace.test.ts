@@ -6,7 +6,7 @@ import {
 } from "@/features/marketplace/lib/marketplace";
 
 describe("marketplace", () => {
-  it("ordena itens ativos por prioridade e sinaliza disponibilidade", () => {
+  it("ordena itens ativos apenas por sortOrder e aplica o limite por conta", () => {
     const catalog = buildMarketplaceCatalog({
       balance: {
         authStatus: "authenticated",
@@ -21,6 +21,7 @@ describe("marketplace", () => {
           backgroundImageUrl: "/brand/reward-b.png",
           creditCost: 700,
           sortOrder: 2,
+          createdAt: new Date("2026-05-08T12:00:00.000Z"),
         },
         {
           id: "reward-a",
@@ -30,6 +31,7 @@ describe("marketplace", () => {
           backgroundImageUrl: "/brand/reward-a.png",
           creditCost: 1_200,
           sortOrder: 1,
+          createdAt: new Date("2026-05-01T12:00:00.000Z"),
         },
         {
           id: "reward-c",
@@ -48,6 +50,7 @@ describe("marketplace", () => {
           backgroundImageUrl: "/brand/reward-d.png",
           creditCost: 500,
           sortOrder: 3,
+          createdAt: new Date("2026-05-09T12:00:00.000Z"),
         },
       ],
       redemptions: [
@@ -58,6 +61,30 @@ describe("marketplace", () => {
           creditsSpent: 700,
           status: "pending",
           createdAt: new Date("2026-05-08T12:00:00.000Z"),
+        },
+        {
+          id: "redemption-2",
+          rewardId: "reward-d",
+          rewardTitle: "Badge de curadoria",
+          creditsSpent: 500,
+          status: "pending",
+          createdAt: new Date("2026-05-08T12:10:00.000Z"),
+        },
+        {
+          id: "redemption-3",
+          rewardId: "reward-d",
+          rewardTitle: "Badge de curadoria",
+          creditsSpent: 500,
+          status: "pending",
+          createdAt: new Date("2026-05-08T12:20:00.000Z"),
+        },
+        {
+          id: "redemption-4",
+          rewardId: "reward-d",
+          rewardTitle: "Badge de curadoria",
+          creditsSpent: 500,
+          status: "pending",
+          createdAt: new Date("2026-05-08T12:30:00.000Z"),
         },
       ],
     });
@@ -72,15 +99,21 @@ describe("marketplace", () => {
       canRedeem: false,
       creditCostLabel: "1.200 REAL Credits",
       isRedeemed: false,
+      redemptionCount: 0,
+      redemptionLimit: 3,
     });
     expect(catalog.rewards[1]).toMatchObject({
-      canRedeem: false,
+      canRedeem: true,
       creditCostLabel: "700 REAL Credits",
-      isRedeemed: true,
+      isRedeemed: false,
+      redemptionCount: 1,
+      redemptionLimit: 3,
     });
     expect(catalog.rewards[2]).toMatchObject({
-      canRedeem: true,
-      isRedeemed: false,
+      canRedeem: false,
+      isRedeemed: true,
+      redemptionCount: 3,
+      redemptionLimit: 3,
     });
   });
 
@@ -91,6 +124,7 @@ describe("marketplace", () => {
         title: "Criar novo mercado",
         creditCost: 750,
       },
+      redemptionCount: 2,
     });
 
     expect(preview).toMatchObject({
@@ -113,7 +147,7 @@ describe("marketplace", () => {
     ).toThrowError("Saldo insuficiente para resgatar Palheta premium.");
   });
 
-  it("bloqueia resgate duplicado quando a conta ja consumiu o item", () => {
+  it("bloqueia resgate quando a conta atinge o limite do item", () => {
     expect(() =>
       previewMarketplaceRedemption({
         availableCredits: 4_000,
@@ -121,8 +155,10 @@ describe("marketplace", () => {
           title: "Palheta premium",
           creditCost: 300,
         },
-        alreadyRedeemed: true,
+        redemptionCount: 3,
       }),
-    ).toThrowError("Esse item do marketplace ja foi resgatado pela sua conta.");
+    ).toThrowError(
+      "Esse item do marketplace atingiu o limite de 3 resgates por conta.",
+    );
   });
 });

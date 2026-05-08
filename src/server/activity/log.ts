@@ -507,14 +507,14 @@ function buildActivityCopy(record: RecentActivityRecord) {
       return {
         group: resolveActivityGroup(record.type),
         typeLabel: "Radar criado",
-        headline: `${record.actor.displayName} abriu um radar`,
+        headline: `${record.actor.displayName} criou um mercado`,
         description: marketTitle,
       };
     case "market_viewed":
       return {
         group: resolveActivityGroup(record.type),
         typeLabel: "Radar aberto",
-        headline: `${record.actor.displayName} abriu um radar`,
+        headline: `${record.actor.displayName} abriu um mercado`,
         description: marketTitle,
       };
     case "forecast_entry":

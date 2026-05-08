@@ -17,6 +17,7 @@ import { FeaturedMarketChart } from "./featured-market-chart";
 
 type FeaturedMarketPanelProps = {
   markets: [FeaturedMarket, ...FeaturedMarket[]];
+  viewerAuthStatus: "anonymous" | "authenticated";
 };
 
 const AUTO_ROTATE_INTERVAL_MS = 5_000;
@@ -67,7 +68,10 @@ function resolveDecisionLabelClassName(label: string) {
   return "text-[1.08rem] md:text-[1.14rem] xl:text-[1.2rem]";
 }
 
-export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
+export function FeaturedMarketPanel({
+  markets,
+  viewerAuthStatus,
+}: FeaturedMarketPanelProps) {
   const { openForecastOrder } = useForecastOrderDialog();
   const [activeMarketId, setActiveMarketId] = useState(markets[0].id);
   const [isPointerInteracting, setIsPointerInteracting] = useState(false);
@@ -137,7 +141,7 @@ export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
 
   return (
     <section
-      className="relative"
+      className="relative h-full"
       onMouseEnter={() => setIsPointerInteracting(true)}
       onMouseLeave={() => setIsPointerInteracting(false)}
       onTouchStart={() => setIsPointerInteracting(true)}
@@ -159,11 +163,11 @@ export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
     >
       <div className="pointer-events-none absolute inset-x-10 -top-5 h-28 rounded-full bg-primary/12 blur-3xl" />
 
-      <div className="rounded-[32px] bg-[linear-gradient(135deg,rgba(95,167,255,0.34),rgba(255,255,255,0.08)_34%,rgba(255,255,255,0.04)_66%,rgba(95,167,255,0.18))] p-px shadow-[0_34px_90px_-42px_rgba(95,167,255,0.24)]">
-        <Card className="code-surface surface-noise relative overflow-hidden rounded-[31px] border-transparent bg-market-surface/96 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
+      <div className="h-full rounded-[32px] bg-[linear-gradient(135deg,rgba(95,167,255,0.34),rgba(255,255,255,0.08)_34%,rgba(255,255,255,0.04)_66%,rgba(95,167,255,0.18))] p-px shadow-[0_34px_90px_-42px_rgba(95,167,255,0.24)]">
+        <Card className="code-surface surface-noise relative h-full overflow-hidden rounded-[31px] border-transparent bg-market-surface/96 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(95,167,255,0.10),transparent)]" />
 
-          <CardContent className="relative flex flex-col p-3.5 md:p-3.5 xl:p-4">
+          <CardContent className="relative flex h-full flex-col p-3.5 md:p-3.5 xl:p-4">
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
               <div className="flex min-w-0 items-start gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-(--market-positive)/20 bg-(--market-positive)/12 text-market-positive shadow-lg shadow-(color:--market-positive)/8 text-sm font-semibold tracking-[0.18em]">
@@ -205,8 +209,8 @@ export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
               </div>
             </div>
 
-            <div className="mt-3.5 grid gap-3.5 xl:grid-cols-[248px_minmax(0,1fr)] xl:items-start">
-              <div className="flex flex-col gap-2">
+            <div className="mt-3.5 grid gap-3.5 xl:min-h-0 xl:flex-1 xl:grid-cols-[248px_minmax(0,1fr)] xl:items-stretch">
+              <div className="flex h-full flex-col gap-2">
                 {shouldShowContextCards
                   ? marketOverviewCards.map((card) => (
                       <div
@@ -261,7 +265,7 @@ export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
                       );
                     })}
 
-                <div className="relative flex flex-col overflow-hidden rounded-[20px] border border-primary/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-3.5 shadow-[0_22px_44px_-34px_rgba(95,167,255,0.45)]">
+                <div className="relative flex flex-1 flex-col overflow-hidden rounded-[20px] border border-primary/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-3.5 shadow-[0_22px_44px_-34px_rgba(95,167,255,0.45)]">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-primary/6 blur-2xl" />
 
                   <div className="relative flex items-start gap-3">
@@ -273,7 +277,7 @@ export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
                     </div>
                   </div>
 
-                  <div className="relative mt-3.5 grid auto-rows-fr gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
+                  <div className="relative mt-3.5 grid flex-1 auto-rows-fr gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
                     {voteOptions.map((outcome, index) => {
                       const toneUi = getToneUi(outcome.tone);
                       const isPrimaryOption =
@@ -294,6 +298,7 @@ export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
                           onClick={() => {
                             openForecastOrder({
                               marketId: activeMarket.id,
+                              viewerAuthStatus,
                               initialMode: "entry",
                               initialPosition: outcome.id as "yes" | "no",
                               executionRedirectRoute: null,
@@ -323,8 +328,8 @@ export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2.5">
-                <div className="flex flex-col rounded-[22px] border border-white/7 bg-(--market-panel)/74 p-2.5 shadow-xl shadow-black/20 md:p-3">
+              <div className="flex h-full min-h-0 flex-col gap-2.5">
+                <div className="flex h-full min-h-72 flex-1 flex-col rounded-[22px] border border-white/7 bg-(--market-panel)/74 p-2.5 shadow-xl shadow-black/20 md:min-h-80 md:p-3 xl:min-h-0">
                   <div className="mb-2.5 flex items-start justify-between gap-3">
                     <div className="min-w-0 space-y-1.5">
                       <div className="flex flex-wrap gap-1.5">
@@ -354,7 +359,7 @@ export function FeaturedMarketPanel({ markets }: FeaturedMarketPanelProps) {
                     </div>
                   </div>
 
-                  <div className="h-64 sm:h-72 xl:h-88">
+                  <div className="flex-1 min-h-64 sm:min-h-72 xl:min-h-0">
                     <FeaturedMarketChart
                       outcomes={liveOutcomes}
                       points={liveMarket.points}

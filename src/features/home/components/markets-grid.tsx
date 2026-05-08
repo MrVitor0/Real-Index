@@ -17,10 +17,17 @@ type MarketsGridProps = {
   tabs: MarketTab[];
   markets: MarketCard[];
   activeTab: string;
+  viewerAuthStatus: "anonymous" | "authenticated";
   onTabChange: (nextTab: string) => void;
 };
 
-function MarketCardItem({ market }: { market: MarketCard }) {
+function MarketCardItem({
+  market,
+  viewerAuthStatus,
+}: {
+  market: MarketCard;
+  viewerAuthStatus: MarketsGridProps["viewerAuthStatus"];
+}) {
   const { openForecastOrder } = useForecastOrderDialog();
   const toneUi = getToneUi(market.tone);
   const baseTagLabel = "Tudo";
@@ -34,6 +41,7 @@ function MarketCardItem({ market }: { market: MarketCard }) {
   const openEntryOrder = (position: "yes" | "no") => {
     openForecastOrder({
       marketId: market.id,
+      viewerAuthStatus,
       initialMode: "entry",
       initialPosition: position,
       executionRedirectRoute: null,
@@ -111,6 +119,7 @@ export function MarketsGrid({
   tabs,
   markets,
   activeTab,
+  viewerAuthStatus,
   onTabChange,
 }: MarketsGridProps) {
   const { ref: tabsRef, dragScrollProps: tabsDragScrollProps } =
@@ -145,7 +154,11 @@ export function MarketsGrid({
       {markets.length > 0 ? (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {markets.map((market) => (
-            <MarketCardItem key={market.id} market={market} />
+            <MarketCardItem
+              key={market.id}
+              market={market}
+              viewerAuthStatus={viewerAuthStatus}
+            />
           ))}
         </div>
       ) : (
