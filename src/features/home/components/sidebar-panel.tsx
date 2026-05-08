@@ -1,22 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import type { Route } from "next";
-import { ChevronRight } from "lucide-react";
-
 import type { CommunityMetricItem } from "@/features/home/contracts/community-metrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { HomeSidebar } from "@/features/home/contracts/home-feed";
-import {
-  formatProbability,
-  formatSignedDelta,
-  getToneUi,
-} from "@/features/home/lib/presentation";
+import { getToneUi } from "@/features/home/lib/presentation";
 import { useCommunityMetrics } from "@/features/home/hooks/use-community-metrics";
+import { useRecentActivity } from "@/features/home/hooks/use-recent-activity";
 
-type SidebarPanelProps = {
-  sidebar: HomeSidebar;
-};
+import { ActivityFeedCard } from "./live-sidebar-panel";
 
 const fallbackMetrics: CommunityMetricItem[] = [
   {
@@ -42,8 +32,10 @@ const fallbackMetrics: CommunityMetricItem[] = [
   },
 ];
 
-export function SidebarPanel({ sidebar }: SidebarPanelProps) {
+export function SidebarPanel() {
   const { data: metricsData, status: metricsStatus } = useCommunityMetrics();
+  const activityState = useRecentActivity(3);
+  const activityItems = activityState.data?.data.items.slice(0, 3) ?? [];
   const metricItems = metricsData?.data.items ?? fallbackMetrics;
   const metricsTitle = metricsData?.data.title ?? "Metricas";
   const metricsStatusLabel =
@@ -54,51 +46,14 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
         : "sync";
 
   return (
-    <aside className="grid gap-3.5 xl:h-full xl:self-stretch xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
-      <Card className="code-surface flex h-full min-h-0 flex-col border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
-        <CardHeader className="px-4 pb-2 pt-3.5">
-          <CardTitle className="flex items-center justify-between text-lg text-white">
-            <span>{sidebar.breakingTitle}</span>
-            <ChevronRight className="h-4 w-4 text-white/36" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 min-h-0 px-4 pb-3.5 pt-0">
-          <div className="divide-y divide-white/6">
-            {sidebar.breakingNews.map((item, index) => {
-              const toneUi = getToneUi(item.tone);
+    <aside className="grid w-full gap-3.5 xl:h-full xl:grid-rows-[auto_minmax(0,1fr)]">
+      <ActivityFeedCard
+        items={activityItems}
+        status={activityState.status}
+        variant="stream"
+      />
 
-              return (
-                <Link
-                  key={item.id}
-                  href={`/radar/${item.id}` as Route}
-                  className="grid grid-cols-[1fr_auto] gap-3 py-3 transition-colors hover:text-white"
-                >
-                  <div className="flex min-w-0 gap-3">
-                    <span className="pt-0.5 text-sm font-medium text-white/28">
-                      {index + 1}
-                    </span>
-                    <div className="flex min-w-0 gap-1.5">
-                      <p className="line-clamp-2 min-w-0 text-sm leading-5 text-white/82">
-                        {item.title}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-semibold tracking-tight text-white">
-                      {formatProbability(item.probability)}
-                    </p>
-                    <p className={`text-xs font-medium ${toneUi.text}`}>
-                      {formatSignedDelta(item.delta)}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="code-surface flex h-full min-h-0 flex-col border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]">
+      <Card className="code-surface flex flex-col border-white/7 bg-market-surface/94 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)] xl:h-full xl:min-h-0">
         <CardHeader className="px-4 pb-2 pt-3.5">
           <CardTitle className="flex items-center justify-between text-lg text-white">
             <span>{metricsTitle}</span>
@@ -107,15 +62,15 @@ export function SidebarPanel({ sidebar }: SidebarPanelProps) {
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 min-h-0 px-4 pb-3.5 pt-0">
-          <div className="grid h-full auto-rows-fr gap-2.5">
+        <CardContent className="px-4 pb-3.5 pt-0 xl:flex-1 xl:min-h-0">
+          <div className="grid gap-2.5 xl:h-full xl:auto-rows-fr">
             {metricItems.map((metric) => {
               const toneUi = getToneUi(metric.tone);
 
               return (
                 <div
                   key={metric.id}
-                  className="flex h-full items-center justify-between gap-4 rounded-[20px] border border-white/8 bg-white/4 px-4 py-3"
+                  className="flex items-center justify-between gap-4 rounded-[20px] border border-white/8 bg-white/4 px-4 py-3 xl:h-full"
                 >
                   <div className="min-w-0 space-y-1">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-white/34">

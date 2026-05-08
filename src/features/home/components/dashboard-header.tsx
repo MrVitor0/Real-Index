@@ -81,7 +81,7 @@ export function DashboardHeader({
 
   return (
     <header className="surface-noise sticky top-0 z-40 border-b border-white/6 bg-market-panel/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-[1760px] flex-col gap-3 px-4 py-3 md:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1880px] flex-col gap-3 px-4 py-3 md:px-6 lg:px-8">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto]">
           <div className="flex min-w-0 items-center gap-3">
             <Link

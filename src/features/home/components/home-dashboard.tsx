@@ -59,7 +59,7 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
     );
   }
 
-  const { navigation, featuredMarket, sidebar, openMarkets } = data.data;
+  const { navigation, featuredMarket, openMarkets } = data.data;
   const baseTabLabel = openMarkets.tabs[0]?.label ?? "Tudo";
   const resolvedActiveTab =
     openMarkets.tabs.find((tab) => tab.label === activeTab)?.label ??
@@ -98,14 +98,30 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
         initialBalance={null}
       />
 
-      <main className="relative mx-auto grid w-full max-w-[1760px] flex-1 gap-6 px-4 pb-10 pt-5 md:px-6 lg:px-8 xl:grid-cols-[320px_minmax(0,1fr)_300px] xl:items-start 2xl:grid-cols-[340px_minmax(0,1fr)_320px]">
-        <div className="order-2 xl:order-1 xl:sticky xl:top-24">
-          <LiveSidebarPanel />
-        </div>
+      <main className="relative mx-auto flex w-full max-w-[1880px] flex-1 flex-col gap-6 px-4 pb-10 pt-5 md:px-6 lg:px-8">
+        <section className="grid gap-6 xl:grid-cols-[minmax(270px,0.66fr)_minmax(0,2.24fr)_19rem] xl:items-start">
+          <div className="order-2 xl:order-1 xl:self-stretch">
+            <div className="h-full xl:sticky xl:top-24">
+              <LiveSidebarPanel
+                showActivity={false}
+                className="h-full"
+                rankingClassName="max-w-none"
+              />
+            </div>
+          </div>
 
-        <div className="order-1 min-w-0 space-y-6 xl:order-2">
-          <FeaturedMarketPanel market={featuredMarket} />
+          <div className="order-1 min-w-0 xl:order-2">
+            <FeaturedMarketPanel market={featuredMarket} />
+          </div>
 
+          <div className="order-3 xl:self-stretch">
+            <div className="h-full xl:sticky xl:top-24">
+              <SidebarPanel />
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-6">
           <MarketsGrid
             tabs={openMarkets.tabs}
             markets={filteredMarkets}
@@ -122,11 +138,7 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
               </span>
             </div>
           ) : null}
-        </div>
-
-        <div className="order-3 xl:sticky xl:top-24">
-          <SidebarPanel sidebar={sidebar} />
-        </div>
+        </section>
       </main>
 
       <HomeFooter />
