@@ -29,5 +29,5 @@
 - [ ] `npm run test:unit` passa sem erros
 - [ ] Nenhuma chave de API, secret ou dado sensível foi exposto
 - [ ] Nenhum dado real de usuário foi incluído (seeds, fixtures, logs)
-- [ ] O código segue as diretrizes do [CONTRIBUTING.md](../CONTRIBUTING.md)
+- [ ] O código segue as diretrizes do [CONTRIBUTING.md](https://github.com/<org>/<repo>/blob/main/CONTRIBUTING.md)
 - [ ] A PR tem um título claro seguindo Conventional Commits (`feat:`, `fix:`, etc.)
