@@ -2,6 +2,7 @@
 
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { ZodIssue } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  createPredictionMarketErrorResponseSchema,
+  createPredictionMarketInputSchema,
   createPredictionMarketResponseSchema,
   type CreatePredictionMarketInput,
 } from "@/features/markets/contracts/create-market";
+import { cn } from "@/lib/utils";
 
 const toneOptions: Array<{
   value: CreatePredictionMarketInput["tone"];
@@ -42,6 +46,12 @@ type CreateMarketFormState = {
   closesAt: string;
 };
 
+type CreateMarketFormFieldName = keyof CreateMarketFormState;
+
+type CreateMarketFormFieldErrors = Partial<
+  Record<CreateMarketFormFieldName, string[]>
+>;
+
 function getInitialCloseDate() {
   const date = new Date();
 
@@ -65,10 +75,96 @@ function splitTags(value: string) {
     .filter(Boolean);
 }
 
+function buildCreateMarketPayload(
+  formState: CreateMarketFormState,
+): CreatePredictionMarketInput {
+  const closesAtDate = new Date(formState.closesAt);
+
+  return {
+    title: formState.title,
+    description: formState.description,
+    overview: formState.overview,
+    category: formState.category,
+    subCategory: formState.subCategory,
+    iconLabel: formState.iconLabel,
+    tone: formState.tone,
+    yesLabel: formState.yesLabel,
+    noLabel: formState.noLabel,
+    tags: splitTags(formState.tagsInput),
+    rules: splitLines(formState.rulesInput),
+    context: splitLines(formState.contextInput),
+    initialProbability: Number(formState.initialProbability),
+    closesAt: Number.isNaN(closesAtDate.getTime())
+      ? ""
+      : closesAtDate.toISOString(),
+  };
+}
+
+function mapIssuePathToFieldName(
+  path: string,
+): CreateMarketFormFieldName | null {
+  switch (path) {
+    case "title":
+    case "description":
+    case "overview":
+    case "category":
+    case "subCategory":
+    case "iconLabel":
+    case "tone":
+    case "yesLabel":
+    case "noLabel":
+    case "initialProbability":
+    case "closesAt":
+      return path;
+    case "tags":
+      return "tagsInput";
+    case "rules":
+      return "rulesInput";
+    case "context":
+      return "contextInput";
+    default:
+      return null;
+  }
+}
+
+function buildFieldErrorsFromIssues(
+  issues: ZodIssue[],
+): CreateMarketFormFieldErrors {
+  const nextFieldErrors: CreateMarketFormFieldErrors = {};
+
+  for (const issue of issues) {
+    const fieldName = mapIssuePathToFieldName(String(issue.path[0] ?? ""));
+
+    if (!fieldName) {
+      continue;
+    }
+
+    const currentMessages = nextFieldErrors[fieldName] ?? [];
+
+    if (!currentMessages.includes(issue.message)) {
+      currentMessages.push(issue.message);
+    }
+
+    nextFieldErrors[fieldName] = currentMessages;
+  }
+
+  return nextFieldErrors;
+}
+
+function getFieldError(
+  fieldErrors: CreateMarketFormFieldErrors,
+  fieldName: CreateMarketFormFieldName,
+) {
+  return fieldErrors[fieldName]?.[0] ?? null;
+}
+
 export function CreateMarketForm() {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<CreateMarketFormFieldErrors>(
+    {},
+  );
   const [formState, setFormState] = useState<CreateMarketFormState>({
     title: "",
     description: "",
@@ -91,6 +187,17 @@ export function CreateMarketForm() {
     event.preventDefault();
     setStatus("submitting");
     setError(null);
+    setFieldErrors({});
+
+    const payload = buildCreateMarketPayload(formState);
+    const parsedPayload = createPredictionMarketInputSchema.safeParse(payload);
+
+    if (!parsedPayload.success) {
+      setStatus("error");
+      setError("Revise os campos destacados e tente novamente.");
+      setFieldErrors(buildFieldErrorsFromIssues(parsedPayload.error.issues));
+      return;
+    }
 
     try {
       const response = await fetch("/api/v1/markets", {
@@ -99,27 +206,34 @@ export function CreateMarketForm() {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({
-          title: formState.title,
-          description: formState.description,
-          overview: formState.overview,
-          category: formState.category,
-          subCategory: formState.subCategory,
-          iconLabel: formState.iconLabel,
-          tone: formState.tone,
-          yesLabel: formState.yesLabel,
-          noLabel: formState.noLabel,
-          tags: splitTags(formState.tagsInput),
-          rules: splitLines(formState.rulesInput),
-          context: splitLines(formState.contextInput),
-          initialProbability: Number(formState.initialProbability),
-          closesAt: new Date(formState.closesAt).toISOString(),
-        }),
+        body: JSON.stringify(parsedPayload.data),
       });
 
       const payload = await response.json();
 
       if (!response.ok) {
+        const parsedError =
+          createPredictionMarketErrorResponseSchema.safeParse(payload);
+
+        if (parsedError.success) {
+          const serverFieldErrors: CreateMarketFormFieldErrors = {};
+
+          for (const [fieldName, messages] of Object.entries(
+            parsedError.data.fieldErrors ?? {},
+          )) {
+            const mappedFieldName = mapIssuePathToFieldName(fieldName);
+
+            if (!mappedFieldName) {
+              continue;
+            }
+
+            serverFieldErrors[mappedFieldName] = messages;
+          }
+
+          setFieldErrors(serverFieldErrors);
+          throw new Error(parsedError.data.error);
+        }
+
         throw new Error(
           typeof payload?.error === "string"
             ? payload.error
@@ -170,9 +284,19 @@ export function CreateMarketForm() {
                     title: event.target.value,
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "title")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
                 placeholder="O deploy vai estabilizar antes do pico da comunidade?"
               />
+              {getFieldError(fieldErrors, "title") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "title")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2 md:col-span-2">
@@ -186,9 +310,19 @@ export function CreateMarketForm() {
                     description: event.target.value,
                   }))
                 }
-                className="min-h-24 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "min-h-24 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "description")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
                 placeholder="Resumo rapido do evento acompanhado."
               />
+              {getFieldError(fieldErrors, "description") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "description")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2 md:col-span-2">
@@ -202,9 +336,19 @@ export function CreateMarketForm() {
                     overview: event.target.value,
                   }))
                 }
-                className="min-h-28 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "min-h-28 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "overview")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
                 placeholder="Contexto que sera exibido na pagina de detalhe."
               />
+              {getFieldError(fieldErrors, "overview") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "overview")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -218,8 +362,18 @@ export function CreateMarketForm() {
                     category: event.target.value,
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "category")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "category") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "category")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -233,8 +387,18 @@ export function CreateMarketForm() {
                     subCategory: event.target.value,
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "subCategory")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "subCategory") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "subCategory")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -248,9 +412,19 @@ export function CreateMarketForm() {
                     iconLabel: event.target.value.toUpperCase(),
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white uppercase"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white uppercase",
+                  getFieldError(fieldErrors, "iconLabel")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
                 maxLength={12}
               />
+              {getFieldError(fieldErrors, "iconLabel") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "iconLabel")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -265,7 +439,12 @@ export function CreateMarketForm() {
                       .value as CreatePredictionMarketInput["tone"],
                   }))
                 }
-                className="h-11 w-full rounded-xl border border-white/8 bg-white/4 px-3 text-sm text-white outline-none"
+                className={cn(
+                  "h-11 w-full rounded-xl border border-white/8 bg-white/4 px-3 text-sm text-white outline-none",
+                  getFieldError(fieldErrors, "tone")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               >
                 {toneOptions.map((toneOption) => (
                   <option key={toneOption.value} value={toneOption.value}>
@@ -273,6 +452,11 @@ export function CreateMarketForm() {
                   </option>
                 ))}
               </select>
+              {getFieldError(fieldErrors, "tone") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "tone")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -286,8 +470,18 @@ export function CreateMarketForm() {
                     yesLabel: event.target.value,
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "yesLabel")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "yesLabel") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "yesLabel")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -301,8 +495,18 @@ export function CreateMarketForm() {
                     noLabel: event.target.value,
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "noLabel")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "noLabel") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "noLabel")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -319,8 +523,18 @@ export function CreateMarketForm() {
                     initialProbability: event.target.value,
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "initialProbability")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "initialProbability") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "initialProbability")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -335,8 +549,18 @@ export function CreateMarketForm() {
                     closesAt: event.target.value,
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "closesAt")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "closesAt") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "closesAt")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2 md:col-span-2">
@@ -350,8 +574,18 @@ export function CreateMarketForm() {
                     tagsInput: event.target.value,
                   }))
                 }
-                className="h-11 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "h-11 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "tagsInput")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "tagsInput") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "tagsInput")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -365,8 +599,18 @@ export function CreateMarketForm() {
                     rulesInput: event.target.value,
                   }))
                 }
-                className="min-h-32 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "min-h-32 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "rulesInput")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "rulesInput") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "rulesInput")}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -380,8 +624,18 @@ export function CreateMarketForm() {
                     contextInput: event.target.value,
                   }))
                 }
-                className="min-h-32 rounded-xl border-white/8 bg-white/4 text-white"
+                className={cn(
+                  "min-h-32 rounded-xl border-white/8 bg-white/4 text-white",
+                  getFieldError(fieldErrors, "contextInput")
+                    ? "border-market-warning/40"
+                    : null,
+                )}
               />
+              {getFieldError(fieldErrors, "contextInput") ? (
+                <p className="text-xs leading-5 text-market-warning">
+                  {getFieldError(fieldErrors, "contextInput")}
+                </p>
+              ) : null}
             </div>
           </div>
 
