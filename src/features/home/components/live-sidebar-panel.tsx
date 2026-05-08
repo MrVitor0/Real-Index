@@ -117,7 +117,7 @@ export function RankingCard({
 
       <CardContent className="flex flex-1 flex-col gap-3 px-4 pb-4 pt-0">
         {champion ? (
-          <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.03))] p-4 shadow-[0_20px_60px_-40px_rgba(255,205,82,0.45)]">
+          <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.03))] p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-[18px] border border-[color:var(--market-warning)]/22 bg-[color:var(--market-warning)]/14 text-lg font-semibold text-[color:var(--market-warning)]">
