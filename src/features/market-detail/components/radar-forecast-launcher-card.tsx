@@ -76,7 +76,7 @@ export function RadarForecastLauncherCard({
 
         <div className="space-y-2.5">
           <p className="text-xs uppercase tracking-[0.16em] text-white/38">
-            Abrir ticket global
+            Escolha uma opção
           </p>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
             <button

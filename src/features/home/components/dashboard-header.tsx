@@ -133,6 +133,16 @@ export function DashboardHeader({
                   >
                     Criar novo Mercado
                   </Link>
+                  <Link
+                    href={positionsRoute}
+                    className={buttonVariants({
+                      variant: "outline",
+                      className:
+                        "hidden h-10 rounded-xl border-white/8 bg-white/4 px-4 text-white/76 hover:bg-white/8 hover:text-white xl:inline-flex",
+                    })}
+                  >
+                    Minhas Posições
+                  </Link>
                 </SignedIn>
 
                 <SignedOut>
