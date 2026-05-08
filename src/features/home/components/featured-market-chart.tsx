@@ -134,7 +134,7 @@ export function FeaturedMarketChart({
   height = 280,
 }: FeaturedMarketChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={height} minWidth={0}>
       <LineChart
         data={points}
         margin={{

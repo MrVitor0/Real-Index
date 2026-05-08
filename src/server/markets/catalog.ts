@@ -34,6 +34,7 @@ import {
   probabilityToSignalScore,
 } from "@/features/market-detail/lib/forecast";
 import { siteConfig } from "@/config/site";
+import { recordPlatformActivity } from "@/server/activity/log";
 import { getDb } from "@/server/db/client";
 import {
   predictionEvents,
@@ -117,6 +118,88 @@ function titleCase(value: string) {
       (segment) => segment[0]?.toUpperCase() + segment.slice(1).toLowerCase(),
     )
     .join(" ");
+}
+
+function normalizeSearchTerm(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function scoreHomeSearchRow(row: EventWithCreatorRow, normalizedQuery: string) {
+  const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+
+  if (!queryTokens.length) {
+    return 0;
+  }
+
+  const title = normalizeSearchTerm(row.event.title);
+  const slug = normalizeSearchTerm(row.event.slug);
+  const category = normalizeSearchTerm(row.event.category);
+  const subCategory = normalizeSearchTerm(row.event.subCategory);
+  const overview = normalizeSearchTerm(row.event.overview);
+  const description = normalizeSearchTerm(row.event.description);
+  const tags = normalizeSearchTerm(row.event.tags.join(" "));
+  const combinedSearchTarget = [
+    title,
+    slug,
+    category,
+    subCategory,
+    overview,
+    description,
+    tags,
+  ].join(" ");
+  const matchingTokens = queryTokens.filter((token) =>
+    combinedSearchTarget.includes(token),
+  );
+
+  if (!matchingTokens.length) {
+    return 0;
+  }
+
+  let score = matchingTokens.length * 4;
+
+  if (matchingTokens.length === queryTokens.length) {
+    score += 8;
+  }
+
+  if (title === normalizedQuery) {
+    score += 28;
+  }
+
+  if (slug === normalizedQuery) {
+    score += 24;
+  }
+
+  if (title.includes(normalizedQuery)) {
+    score += 16;
+  }
+
+  if (slug.includes(normalizedQuery)) {
+    score += 12;
+  }
+
+  if (tags.includes(normalizedQuery)) {
+    score += 10;
+  }
+
+  if (
+    category.includes(normalizedQuery) ||
+    subCategory.includes(normalizedQuery)
+  ) {
+    score += 8;
+  }
+
+  if (
+    overview.includes(normalizedQuery) ||
+    description.includes(normalizedQuery)
+  ) {
+    score += 6;
+  }
+
+  return score;
 }
 
 function slugify(value: string) {
@@ -396,6 +479,11 @@ async function ensureSystemProfile() {
       bio: "Perfil de bootstrap do catalogo inicial do REAL Severity Index.",
     })
     .returning();
+
+  await recordPlatformActivity({
+    actorProfileId: createdProfile.id,
+    type: "user_joined",
+  });
 
   return createdProfile;
 }
@@ -875,6 +963,39 @@ export async function getHomeFeedData(): Promise<HomeFeedData> {
   });
 }
 
+export async function searchHomeMarkets(query: string, limit = 6) {
+  const normalizedQuery = normalizeSearchTerm(query);
+
+  if (normalizedQuery.length < 2) {
+    return [] satisfies MarketCard[];
+  }
+
+  const rows = await listEventRows(eq(predictionEvents.status, "active"));
+
+  return rows
+    .map((row) => {
+      const state = getEventMarketState(row);
+
+      return {
+        row,
+        watcherCount: state.watcherCount,
+        updatedAt: new Date(row.event.updatedAt).getTime(),
+        score: scoreHomeSearchRow(row, normalizedQuery),
+      };
+    })
+    .filter((item) => item.score > 0)
+    .sort(
+      (leftItem, rightItem) =>
+        rightItem.score - leftItem.score ||
+        Number(rightItem.row.event.featured) -
+          Number(leftItem.row.event.featured) ||
+        rightItem.watcherCount - leftItem.watcherCount ||
+        rightItem.updatedAt - leftItem.updatedAt,
+    )
+    .slice(0, limit)
+    .map((item) => buildMarketCard(item.row));
+}
+
 export async function getRadarMarketDetailBySlug(
   marketSlug: string,
 ): Promise<RadarMarketDetail | null> {
@@ -968,6 +1089,21 @@ export async function getRadarMarketDetailBySlug(
       ]).map((value) => Number(value)),
     },
   });
+}
+
+export async function getPredictionEventIdBySlug(marketSlug: string) {
+  await ensurePredictionCatalogBootstrapped();
+
+  const db = getDb();
+  const [event] = await db
+    .select({
+      id: predictionEvents.id,
+    })
+    .from(predictionEvents)
+    .where(eq(predictionEvents.slug, marketSlug))
+    .limit(1);
+
+  return event?.id ?? null;
 }
 
 function buildUsernameSeed(viewer: ViewerIdentity) {
@@ -1088,6 +1224,12 @@ export async function createPredictionMarket(
     probability: payload.initialProbability,
     watcherCount: 1,
     volumeCredits: 0,
+  });
+
+  await recordPlatformActivity({
+    actorProfileId: profile.id,
+    predictionEventId: createdEvent.id,
+    type: "market_created",
   });
 
   return {

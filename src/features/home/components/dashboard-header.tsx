@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Route } from "next";
 import Link from "next/link";
-import { CircleHelp, Menu, Search, Settings } from "lucide-react";
+import { BarChart3, CircleHelp, Menu, Settings } from "lucide-react";
 import {
   SignedIn,
   SignedOut,
@@ -13,7 +13,6 @@ import {
 
 import { RealLogoLockup } from "@/components/branding/real-logo";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { siteConfig } from "@/config/site";
 import {
   Sheet,
@@ -24,6 +23,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { NavbarBalanceChip } from "@/features/account/components/navbar-balance-chip";
+import type { NavbarBalance } from "@/features/account/contracts/navbar-balance";
+import { HomeSearches } from "@/features/home/components/home-searches";
 import { cn } from "@/lib/utils";
 import type { HomeNavigation } from "@/features/home/contracts/home-feed";
 
@@ -33,12 +35,14 @@ type DashboardHeaderProps = {
   onSearchQueryChange?: (value: string) => void;
   authEnabled: boolean;
   authStatus: "anonymous" | "authenticated";
+  initialBalance: NavbarBalance | null;
 };
 
 const loginRoute = "/login" as Route;
 const signUpRoute = "/cadastro" as Route;
 const accountRoute = "/conta" as Route;
 const createMarketRoute = "/conta/mercados/novo" as Route;
+const positionsRoute = "/conta/posicoes" as Route;
 const userButtonLocalization = {
   ...authLocalization,
   SIGN_OUT: "Desconectar",
@@ -50,6 +54,7 @@ export function DashboardHeader({
   onSearchQueryChange,
   authEnabled,
   authStatus,
+  initialBalance,
 }: DashboardHeaderProps) {
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -76,8 +81,8 @@ export function DashboardHeader({
 
   return (
     <header className="surface-noise sticky top-0 z-40 border-b border-white/6 bg-market-panel/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-375 flex-col gap-3 px-4 py-3 md:px-6 lg:px-8">
-        <div className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
+      <div className="mx-auto flex w-full max-w-[1760px] flex-col gap-3 px-4 py-3 md:px-6 lg:px-8">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto]">
           <div className="flex min-w-0 items-center gap-3">
             <Link
               href="/"
@@ -94,21 +99,15 @@ export function DashboardHeader({
             </Link>
           </div>
 
-          <div className="relative order-3 w-full lg:order-0 lg:mx-auto lg:max-w-2xl">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
-            <Input
-              id="home-search"
-              value={resolvedSearchQuery}
-              onChange={(event) => handleSearchQueryChange(event.target.value)}
+          <div className="order-3 col-span-2 w-full lg:order-0 lg:col-span-1 lg:mx-auto lg:max-w-2xl">
+            <HomeSearches
+              query={resolvedSearchQuery}
+              onQueryChange={handleSearchQueryChange}
               placeholder={navigation.searchPlaceholder}
-              className="h-11 rounded-xl border-white/8 bg-white/5 pl-11 pr-12 text-sm text-white placeholder:text-white/45 focus-visible:border-primary/50 focus-visible:ring-primary/20"
             />
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium tracking-[0.2em] text-white/28">
-              /
-            </span>
           </div>
 
-          <div className="flex items-center justify-end gap-2 self-end lg:self-auto">
+          <div className="flex items-center justify-end gap-2 justify-self-end">
             {authEnabled ? (
               <>
                 <SignedOut>
@@ -125,29 +124,28 @@ export function DashboardHeader({
                 </SignedOut>
 
                 <SignedIn>
-                  <Link
-                    href={createMarketRoute}
-                    className={buttonVariants({
-                      size: "sm",
-                      className: "hidden h-12 rounded-2xl px-5 sm:inline-flex",
-                    })}
-                  >
-                    Criar radar
-                  </Link>
-                  <div className="hidden rounded-2xl border border-white/8 bg-white/4 p-1 sm:block">
-                    <UserButton
-                      disableDefaultLinks
-                      localization={userButtonLocalization}
-                      additionalLinks={[
-                        {
-                          href: accountRoute,
-                          icon: <Settings className="h-4 w-4" />,
-                          label: "Minha conta",
-                          signedIn: true,
-                        },
-                      ]}
-                    />
-                  </div>
+                  <NavbarBalanceChip initialBalance={initialBalance} />
+                  <UserButton
+                    size="icon"
+                    className="hidden cursor-pointer sm:flex"
+                    disableDefaultLinks
+                    localization={userButtonLocalization}
+                    classNames={{ content: { menuItem: "cursor-pointer" } }}
+                    additionalLinks={[
+                      {
+                        href: accountRoute,
+                        icon: <Settings className="h-4 w-4" />,
+                        label: "Minha conta",
+                        signedIn: true,
+                      },
+                      {
+                        href: positionsRoute,
+                        icon: <BarChart3 className="h-4 w-4" />,
+                        label: "Minhas Posições",
+                        signedIn: true,
+                      },
+                    ]}
+                  />
                 </SignedIn>
               </>
             ) : (
@@ -172,7 +170,7 @@ export function DashboardHeader({
                     variant="ghost"
                     size="icon"
                     aria-label="Abrir menu principal"
-                    className="h-10 w-10 rounded-xl border border-white/8 bg-white/4 text-white/76 hover:bg-white/8 hover:text-white"
+                    className="h-10 w-10 rounded-xl border border-white/8 bg-white/4 text-white/76 hover:bg-white/8 hover:text-white lg:hidden"
                   />
                 }
               >

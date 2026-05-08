@@ -119,11 +119,6 @@ export function FeaturedMarketPanel({ market }: FeaturedMarketPanelProps) {
                       Momento de decidir
                     </div>
 
-                    <div>
-                      <p className="text-base font-semibold leading-tight text-white">
-                        O que vai acontecer?
-                      </p>
-                    </div>
                   </div>
                 </div>
 

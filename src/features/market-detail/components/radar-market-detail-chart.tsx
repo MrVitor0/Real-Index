@@ -83,8 +83,8 @@ export function RadarMarketDetailChart({
 
   return (
     <div className="space-y-4">
-      <div className="h-[340px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="min-w-0 h-[340px] w-full">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <LineChart
             data={visiblePoints as RadarMarketChartPoint[]}
             margin={{ top: 8, right: 6, left: -24, bottom: 4 }}

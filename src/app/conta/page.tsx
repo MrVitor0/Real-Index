@@ -16,6 +16,7 @@ import { RealLogoLockup } from "@/components/branding/real-logo";
 import { AppNavbar } from "@/components/navigation/app-navbar";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { ForecastPositionsGrid } from "@/features/account/components/forecast-positions-grid";
 import { siteConfig } from "@/config/site";
 import { getServerSession } from "@/lib/auth/server";
 import { getEnvironmentStatus } from "@/lib/env";
@@ -40,6 +41,7 @@ export const metadata: Metadata = {
 
 const loginRoute = "/login" as Route;
 const loginWithNextRoute = "/login?next=%2Fconta" as Route;
+const accountPositionsRoute = "/conta/posicoes" as Route;
 const createMarketRoute = "/conta/mercados/novo" as Route;
 
 export default async function ContaPage() {
@@ -68,10 +70,13 @@ export default async function ContaPage() {
     image: session.user.image ?? null,
   });
 
-  const sessionExpiration = new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(session.session.expiresAt);
+  const expiresAtDate = new Date(session.session.expiresAt);
+  const sessionExpiration = Number.isNaN(expiresAtDate.getTime())
+    ? null
+    : new Intl.DateTimeFormat("pt-BR", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(expiresAtDate);
 
   return (
     <>
@@ -79,57 +84,6 @@ export default async function ContaPage() {
 
       <main className="min-h-screen bg-background px-4 py-10 text-foreground md:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-          <Link
-            href="/"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "w-fit rounded-full border border-white/8 bg-white/4 px-4 text-white/76 hover:bg-white/8 hover:text-white",
-            )}
-          >
-            <Home className="mr-2 h-4 w-4" />
-            Voltar ao dashboard
-          </Link>
-
-          <section className="surface-noise flex flex-col justify-between gap-6 rounded-[32px] border border-white/8 bg-(--market-surface)/94 p-8 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)] md:flex-row md:items-center">
-            <div className="space-y-4">
-              <RealLogoLockup
-                eyebrow="perfil da comunidade"
-                subtitle={siteConfig.tagline}
-                markClassName="h-12 w-12"
-                titleClassName="text-xl md:text-2xl"
-                subtitleClassName="whitespace-normal leading-6"
-              />
-              <Badge className="w-fit rounded-full border border-primary/20 bg-primary/12 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-primary hover:bg-primary/12">
-                Conta
-              </Badge>
-              <div>
-                <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                  Sua conta esta conectada ao radar.
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-white/58 md:text-base">
-                  Seu perfil acompanha forecasts, reputacao e REAL Credits
-                  virtuais dentro da comunidade, sem dinheiro real, saque ou
-                  payout.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Link
-                    href={createMarketRoute}
-                    className={buttonVariants({
-                      size: "sm",
-                      className: "h-11 rounded-xl px-4",
-                    })}
-                  >
-                    Criar novo radar
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-white/8 bg-white/4 p-2">
-              <UserButton />
-            </div>
-          </section>
-
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-[28px] border border-white/8 bg-(--market-surface)/92 p-6 shadow-[0_24px_64px_-48px_rgba(0,0,0,0.9)]">
               <WalletCards className="h-5 w-5 text-primary" />
@@ -207,7 +161,7 @@ export default async function ContaPage() {
                 Sessao expira em
               </p>
               <p className="mt-2 text-lg font-semibold text-white">
-                {sessionExpiration}
+                {sessionExpiration ?? "—"}
               </p>
             </div>
           </section>
@@ -223,73 +177,29 @@ export default async function ContaPage() {
                 </h2>
               </div>
 
-              <Badge className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-white/72 hover:bg-white/4">
-                {forecastSummary.openPositions} abertas
-              </Badge>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href={accountPositionsRoute}
+                  className={buttonVariants({
+                    variant: "outline",
+                    className:
+                      "h-10 rounded-xl border-white/8 bg-white/4 px-4 text-white/76 hover:bg-white/8 hover:text-white",
+                  })}
+                >
+                  Abrir pagina
+                </Link>
+                <Badge className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-white/72 hover:bg-white/4">
+                  {forecastSummary.openPositions} abertas
+                </Badge>
+              </div>
             </div>
 
-            {forecastSummary.positions.length > 0 ? (
-              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {forecastSummary.positions.map((position) => (
-                  <Link
-                    key={position.id}
-                    href={`/radar/${position.slug}` as Route}
-                    className="rounded-[24px] border border-white/8 bg-white/3 p-4 transition-colors hover:bg-white/6"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.16em] text-white/34">
-                          {position.sideLabel}
-                        </p>
-                        <h3 className="mt-2 text-lg font-semibold text-white">
-                          {position.title}
-                        </h3>
-                      </div>
-
-                      <span className="text-lg font-semibold text-white">
-                        {position.probability}%
-                      </span>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-white/56">
-                      <div>
-                        <p>Cotas</p>
-                        <p className="mt-1 font-semibold text-white/84">
-                          {position.sharesLabel}
-                        </p>
-                      </div>
-                      <div>
-                        <p>Em jogo</p>
-                        <p className="mt-1 font-semibold text-white/84">
-                          {position.investedCreditsLabel}
-                        </p>
-                      </div>
-                      <div>
-                        <p>Valor atual</p>
-                        <p className="mt-1 font-semibold text-white/84">
-                          {position.marketValueCreditsLabel}
-                        </p>
-                      </div>
-                      <div>
-                        <p>Delta</p>
-                        <p className="mt-1 font-semibold text-white/84">
-                          {position.unrealizedDeltaLabel}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="mt-4 text-sm text-white/46">
-                      Fecha em {position.closeLabel}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-5 text-sm leading-7 text-white/52">
-                Sua conta ainda nao abriu leituras. Entre em um radar para usar
-                seus REAL Credits e mover o grafico da comunidade.
-              </p>
-            )}
+            <div className="mt-5">
+              <ForecastPositionsGrid
+                positions={forecastSummary.positions}
+                emptyMessage="Sua conta ainda nao abriu leituras. Entre em um radar para usar seus REAL Credits e mover o grafico da comunidade."
+              />
+            </div>
           </section>
 
           <section className="rounded-[32px] border border-white/8 bg-(--market-surface)/92 p-6 shadow-[0_24px_64px_-48px_rgba(0,0,0,0.9)]">

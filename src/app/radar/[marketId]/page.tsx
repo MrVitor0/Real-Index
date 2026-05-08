@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { AppNavbar } from "@/components/navigation/app-navbar";
 import { siteConfig } from "@/config/site";
 import { RadarMarketDetailPage } from "@/features/market-detail/components/radar-market-detail-page";
+import { getServerSession } from "@/lib/auth/server";
 import { getRadarMarketDetailBySlug } from "@/server/markets/catalog";
+import { getViewerForecastMarketState } from "@/server/markets/trading";
 
 export const dynamic = "force-dynamic";
 
@@ -56,16 +58,34 @@ export default async function RadarMarketDetailRoute({
   params,
 }: RadarMarketDetailRouteProps) {
   const { marketId } = await params;
-  const market = await getRadarMarketDetailBySlug(marketId);
+  const [market, session] = await Promise.all([
+    getRadarMarketDetailBySlug(marketId),
+    getServerSession(),
+  ]);
 
   if (!market) {
     notFound();
   }
 
+  const initialAccountState = await getViewerForecastMarketState(
+    session?.user
+      ? {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          image: session.user.image ?? null,
+        }
+      : null,
+    marketId,
+  );
+
   return (
     <>
       <AppNavbar />
-      <RadarMarketDetailPage market={market} />
+      <RadarMarketDetailPage
+        market={market}
+        initialAccountState={initialAccountState}
+      />
     </>
   );
 }

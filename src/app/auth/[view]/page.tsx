@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { SignOut } from "@neondatabase/auth/react/ui";
 
 import { siteConfig } from "@/config/site";
 import {
@@ -78,6 +79,10 @@ export async function generateMetadata({
 
 export default async function AuthRoutePage({ params }: AuthRoutePageProps) {
   const { view } = await params;
+
+  if (view === "sign-out") {
+    return <SignOut redirectTo="/" />;
+  }
 
   if (!isSupportedAuthView(view)) {
     notFound();

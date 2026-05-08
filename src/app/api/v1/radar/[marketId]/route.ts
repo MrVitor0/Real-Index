@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { radarMarketDetailSchema } from "@/features/market-detail/contracts/radar-market-detail";
+import { recordPlatformActivity } from "@/server/activity/log";
 import { createRouteContext } from "@/server/api/route-context";
-import { getRadarMarketDetailBySlug } from "@/server/markets/catalog";
+import {
+  getPredictionEventIdBySlug,
+  getRadarMarketDetailBySlug,
+  syncViewerProfile,
+} from "@/server/markets/catalog";
 
 type RouteProps = {
   params: Promise<{
@@ -31,6 +36,25 @@ export async function GET(request: Request, { params }: RouteProps) {
           },
         },
       );
+    }
+
+    if (context.viewer) {
+      try {
+        const [profile, predictionEventId] = await Promise.all([
+          syncViewerProfile(context.viewer),
+          getPredictionEventIdBySlug(marketId),
+        ]);
+
+        if (predictionEventId) {
+          await recordPlatformActivity({
+            actorProfileId: profile.id,
+            predictionEventId,
+            type: "market_viewed",
+          });
+        }
+      } catch (activityError) {
+        console.error("Failed to record radar open activity", activityError);
+      }
     }
 
     return NextResponse.json(radarMarketDetailSchema.parse(market), {

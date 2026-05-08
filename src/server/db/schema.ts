@@ -39,6 +39,15 @@ export const forecastLedgerEntryTypeEnum = pgEnum(
   ["grant", "entry", "exit", "flip-exit", "flip-entry", "settlement"],
 );
 
+export const platformActivityTypeEnum = pgEnum("platform_activity_type", [
+  "user_joined",
+  "market_created",
+  "market_viewed",
+  "forecast_entry",
+  "forecast_exit",
+  "forecast_flip",
+]);
+
 export const profiles = pgTable(
   "profiles",
   {
@@ -254,6 +263,46 @@ export const forecastLedgerEntries = pgTable(
   ],
 );
 
+export const platformActivityLogs = pgTable(
+  "platform_activity_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    actorProfileId: uuid("actor_profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    predictionEventId: uuid("prediction_event_id").references(
+      () => predictionEvents.id,
+      { onDelete: "cascade" },
+    ),
+    type: platformActivityTypeEnum("type").notNull(),
+    fromSide: predictionOutcomeEnum("from_side"),
+    toSide: predictionOutcomeEnum("to_side"),
+    creditsAmount: numeric("credits_amount", {
+      precision: 14,
+      scale: 6,
+      mode: "number",
+    })
+      .notNull()
+      .default(0),
+    sharesAmount: numeric("shares_amount", {
+      precision: 14,
+      scale: 6,
+      mode: "number",
+    })
+      .notNull()
+      .default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("platform_activity_logs_actor_idx").on(table.actorProfileId),
+    index("platform_activity_logs_market_idx").on(table.predictionEventId),
+    index("platform_activity_logs_type_idx").on(table.type),
+    index("platform_activity_logs_created_idx").on(table.createdAt),
+  ],
+);
+
 export type Profile = InferSelectModel<typeof profiles>;
 export type NewProfile = InferInsertModel<typeof profiles>;
 export type PredictionEvent = InferSelectModel<typeof predictionEvents>;
@@ -273,4 +322,10 @@ export type ForecastLedgerEntryRow = InferSelectModel<
 >;
 export type NewForecastLedgerEntryRow = InferInsertModel<
   typeof forecastLedgerEntries
+>;
+export type PlatformActivityType =
+  (typeof platformActivityTypeEnum.enumValues)[number];
+export type PlatformActivityLog = InferSelectModel<typeof platformActivityLogs>;
+export type NewPlatformActivityLog = InferInsertModel<
+  typeof platformActivityLogs
 >;

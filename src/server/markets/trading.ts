@@ -8,6 +8,7 @@ import type {
   RadarForecastPreviewRequest,
   RadarForecastPreviewResponse,
 } from "@/features/market-detail/contracts/radar-market-detail";
+import type { NavbarBalance } from "@/features/account/contracts/navbar-balance";
 import {
   formatCredits,
   parseCreditsInput,
@@ -27,6 +28,7 @@ import {
   type ForecastMarket,
   type ForecastPortfolio,
 } from "@/features/market-detail/lib/forecast-engine";
+import { recordPlatformActivity } from "@/server/activity/log";
 import { getDb } from "@/server/db/client";
 import {
   forecastLedgerEntries,
@@ -235,6 +237,14 @@ function buildAnonymousForecastAccountState(): RadarForecastAccountState {
   };
 }
 
+function buildAnonymousNavbarBalance(): NavbarBalance {
+  return {
+    authStatus: "anonymous",
+    availableCredits: 0,
+    availableCreditsLabel: formatCredits(0),
+  };
+}
+
 function buildForecastAccountState(input: {
   portfolio: ForecastPortfolio;
   markets: ForecastMarket[];
@@ -327,6 +337,21 @@ export async function getViewerForecastMarketState(
   });
 }
 
+export async function getViewerForecastBalance(
+  viewer: ViewerIdentity | null,
+): Promise<NavbarBalance> {
+  if (!viewer) {
+    return buildAnonymousNavbarBalance();
+  }
+
+  const profile = await syncViewerProfile(viewer);
+
+  return {
+    authStatus: "authenticated",
+    availableCredits: profile.availableCredits,
+    availableCreditsLabel: formatCredits(profile.availableCredits),
+  };
+}
 function buildOperationPreviewLabels(input: {
   preview: ForecastEntryPreview | ForecastExitPreview | ForecastFlipPreview;
   yesLabel: string;
@@ -358,7 +383,7 @@ function buildOperationPreviewLabels(input: {
   if (preview.kind === "exit") {
     return {
       kind: "exit",
-      actionLabel: "Liberar credits",
+      actionLabel: "Comprar credits",
       positionLabel: preview.side === "yes" ? yesLabel : noLabel,
       credits: preview.creditsReleased,
       creditsLabel: formatCredits(preview.creditsReleased),
@@ -525,6 +550,38 @@ function buildExecutionMessage(input: {
   return `Leitura virou para ${preview.toSide === "yes" ? yesLabel : noLabel}.`;
 }
 
+function resolveForecastActivity(
+  preview: ForecastEntryPreview | ForecastExitPreview | ForecastFlipPreview,
+) {
+  if (preview.kind === "entry") {
+    return {
+      type: "forecast_entry" as const,
+      fromSide: null,
+      toSide: preview.side,
+      creditsAmount: preview.spendCredits,
+      sharesAmount: preview.shares,
+    };
+  }
+
+  if (preview.kind === "exit") {
+    return {
+      type: "forecast_exit" as const,
+      fromSide: null,
+      toSide: preview.side,
+      creditsAmount: preview.creditsReleased,
+      sharesAmount: preview.sharesToExit,
+    };
+  }
+
+  return {
+    type: "forecast_flip" as const,
+    fromSide: preview.fromSide,
+    toSide: preview.toSide,
+    creditsAmount: preview.openedPosition.spendCredits,
+    sharesAmount: preview.openedPosition.shares,
+  };
+}
+
 async function persistOperationResult(input: {
   profile: Profile;
   eventRow: TradingEventRow;
@@ -533,6 +590,7 @@ async function persistOperationResult(input: {
   preview: ForecastEntryPreview | ForecastExitPreview | ForecastFlipPreview;
 }) {
   const db = getDb();
+  const persistenceTimestamp = new Date();
   const nextPosition = getForecastPosition(
     input.portfolioAfter,
     input.eventRow.event.id,
@@ -563,89 +621,94 @@ async function persistOperationResult(input: {
   );
   const newLedgerEntries = input.portfolioAfter.ledger;
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(profiles)
+  await db
+    .update(profiles)
+    .set({
+      availableCredits: input.portfolioAfter.availableCredits,
+      realizedDeltaCredits: input.portfolioAfter.realizedDeltaCredits,
+      updatedAt: persistenceTimestamp,
+    })
+    .where(eq(profiles.id, input.profile.id));
+
+  if (!nextPosition) {
+    await db
+      .delete(predictionPositions)
+      .where(
+        and(
+          eq(predictionPositions.profileId, input.profile.id),
+          eq(predictionPositions.predictionEventId, input.eventRow.event.id),
+        ),
+      );
+  }
+
+  if (currentPosition && nextPosition) {
+    await db
+      .update(predictionPositions)
       .set({
-        availableCredits: input.portfolioAfter.availableCredits,
-        realizedDeltaCredits: input.portfolioAfter.realizedDeltaCredits,
-        updatedAt: new Date(),
-      })
-      .where(eq(profiles.id, input.profile.id));
-
-    if (!nextPosition) {
-      await tx
-        .delete(predictionPositions)
-        .where(
-          and(
-            eq(predictionPositions.profileId, input.profile.id),
-            eq(predictionPositions.predictionEventId, input.eventRow.event.id),
-          ),
-        );
-    }
-
-    if (currentPosition && nextPosition) {
-      await tx
-        .update(predictionPositions)
-        .set({
-          side: nextPosition.side,
-          shares: nextPosition.shares,
-          investedCredits: nextPosition.investedCredits,
-          averageEntryPrice: nextPosition.averageEntryPrice,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(predictionPositions.profileId, input.profile.id),
-            eq(predictionPositions.predictionEventId, input.eventRow.event.id),
-          ),
-        );
-    }
-
-    if (!currentPosition && nextPosition) {
-      await tx.insert(predictionPositions).values({
-        profileId: input.profile.id,
-        predictionEventId: input.eventRow.event.id,
         side: nextPosition.side,
         shares: nextPosition.shares,
         investedCredits: nextPosition.investedCredits,
         averageEntryPrice: nextPosition.averageEntryPrice,
-      });
-    }
-
-    if (newLedgerEntries.length) {
-      await tx.insert(forecastLedgerEntries).values(
-        newLedgerEntries.map((entry) => ({
-          profileId: input.profile.id,
-          predictionEventId: entry.marketId ?? null,
-          type: entry.type,
-          side: entry.side ?? null,
-          creditsDelta: entry.creditsDelta,
-          sharesDelta: entry.sharesDelta,
-          executionPrice: entry.executionPrice ?? null,
-          realizedDeltaCredits: entry.realizedDeltaCredits,
-        })),
-      );
-    }
-
-    await tx
-      .update(predictionEvents)
-      .set({
-        communityProbability: nextProbability,
-        severityScore: nextProbability,
-        watcherCount: nextWatcherCount,
-        volumeCredits: nextVolumeCredits,
-        updatedAt: new Date(),
+        updatedAt: persistenceTimestamp,
       })
-      .where(eq(predictionEvents.id, input.eventRow.event.id));
+      .where(
+        and(
+          eq(predictionPositions.profileId, input.profile.id),
+          eq(predictionPositions.predictionEventId, input.eventRow.event.id),
+        ),
+      );
+  }
 
-    await tx.insert(predictionEventSnapshots).values({
+  if (!currentPosition && nextPosition) {
+    await db.insert(predictionPositions).values({
+      profileId: input.profile.id,
       predictionEventId: input.eventRow.event.id,
-      probability: nextProbability,
+      side: nextPosition.side,
+      shares: nextPosition.shares,
+      investedCredits: nextPosition.investedCredits,
+      averageEntryPrice: nextPosition.averageEntryPrice,
+    });
+  }
+
+  if (newLedgerEntries.length) {
+    await db.insert(forecastLedgerEntries).values(
+      newLedgerEntries.map((entry) => ({
+        profileId: input.profile.id,
+        predictionEventId: entry.marketId ?? null,
+        type: entry.type,
+        side: entry.side ?? null,
+        creditsDelta: entry.creditsDelta,
+        sharesDelta: entry.sharesDelta,
+        executionPrice: entry.executionPrice ?? null,
+        realizedDeltaCredits: entry.realizedDeltaCredits,
+      })),
+    );
+  }
+
+  await db
+    .update(predictionEvents)
+    .set({
+      communityProbability: nextProbability,
+      severityScore: nextProbability,
       watcherCount: nextWatcherCount,
       volumeCredits: nextVolumeCredits,
-      createdAt: new Date(),
-    });
+      updatedAt: persistenceTimestamp,
+    })
+    .where(eq(predictionEvents.id, input.eventRow.event.id));
+
+  await db.insert(predictionEventSnapshots).values({
+    predictionEventId: input.eventRow.event.id,
+    probability: nextProbability,
+    watcherCount: nextWatcherCount,
+    volumeCredits: nextVolumeCredits,
+    createdAt: persistenceTimestamp,
+  });
+
+  await recordPlatformActivity({
+    actorProfileId: input.profile.id,
+    predictionEventId: input.eventRow.event.id,
+    createdAt: persistenceTimestamp,
+    ...resolveForecastActivity(input.preview),
   });
 }
 

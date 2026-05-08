@@ -536,7 +536,7 @@ function resolveExitShares(
 
   const creditsToRelease = normalizeCredits(
     plan.creditsToRelease,
-    "Credits para liberar",
+    "Credits para comprar",
   );
   const maxCreditsToRelease = roundValue(
     position.shares * pricePerShareCredits,
@@ -544,7 +544,7 @@ function resolveExitShares(
 
   assertForecast(
     creditsToRelease <= maxCreditsToRelease + EPSILON,
-    "Nao existe valor suficiente para liberar essa quantia de credits.",
+    "Nao existe valor suficiente para comprar essa quantia de credits.",
   );
 
   return roundValue(

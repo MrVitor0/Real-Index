@@ -12,6 +12,7 @@ import { DashboardHeader } from "./dashboard-header";
 import { FeaturedMarketPanel } from "./featured-market-panel";
 import { HomeFooter } from "./home-footer";
 import { HomeDashboardSkeleton } from "./home-dashboard-skeleton";
+import { LiveSidebarPanel } from "./live-sidebar-panel";
 import { MarketsGrid } from "./markets-grid";
 import { SidebarPanel } from "./sidebar-panel";
 
@@ -94,33 +95,38 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
         onSearchQueryChange={setSearchQuery}
         authEnabled={authEnabled}
         authStatus={data.meta.auth.status}
+        initialBalance={null}
       />
 
-      <main className="relative mx-auto flex w-full max-w-375 flex-1 flex-col gap-6 px-4 pb-10 pt-5 md:px-6 lg:px-8">
-        <div className="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-stretch">
-          <FeaturedMarketPanel market={featuredMarket} />
-          <SidebarPanel sidebar={sidebar} />
+      <main className="relative mx-auto grid w-full max-w-[1760px] flex-1 gap-6 px-4 pb-10 pt-5 md:px-6 lg:px-8 xl:grid-cols-[320px_minmax(0,1fr)_300px] xl:items-start 2xl:grid-cols-[340px_minmax(0,1fr)_320px]">
+        <div className="order-2 xl:order-1 xl:sticky xl:top-24">
+          <LiveSidebarPanel />
         </div>
 
-        <MarketsGrid
-          title={openMarkets.title}
-          tabs={openMarkets.tabs}
-          markets={filteredMarkets}
-          activeTab={resolvedActiveTab}
-          onTabChange={setActiveTab}
-          searchQuery={searchQuery}
-          hasActiveSearch={normalizedSearch.length > 0}
-        />
+        <div className="order-1 min-w-0 space-y-6 xl:order-2">
+          <FeaturedMarketPanel market={featuredMarket} />
 
-        {status === "error" && error ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-(--market-warning)/18 bg-(--market-warning)/10 px-4 py-3 text-sm text-market-warning">
-            <AlertTriangle className="h-4 w-4" />
-            <span>
-              Mostrando o ultimo snapshot valido enquanto o endpoint se
-              recupera.
-            </span>
-          </div>
-        ) : null}
+          <MarketsGrid
+            tabs={openMarkets.tabs}
+            markets={filteredMarkets}
+            activeTab={resolvedActiveTab}
+            onTabChange={setActiveTab}
+          />
+
+          {status === "error" && error ? (
+            <div className="flex items-center gap-3 rounded-2xl border border-(--market-warning)/18 bg-(--market-warning)/10 px-4 py-3 text-sm text-market-warning">
+              <AlertTriangle className="h-4 w-4" />
+              <span>
+                Mostrando o ultimo snapshot valido enquanto o endpoint se
+                recupera.
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="order-3 xl:sticky xl:top-24">
+          <SidebarPanel sidebar={sidebar} />
+        </div>
       </main>
 
       <HomeFooter />

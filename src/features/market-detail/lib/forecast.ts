@@ -11,6 +11,10 @@ const numberFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2,
 });
 
+const integerFormatter = new Intl.NumberFormat("pt-BR", {
+  maximumFractionDigits: 0,
+});
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -35,7 +39,7 @@ export function formatCreditsInput(value: string | number) {
     return "";
   }
 
-  return formatCredits(credits);
+  return integerFormatter.format(credits);
 }
 
 export function formatCompactCredits(value: number) {
@@ -47,7 +51,7 @@ export function formatCompactCredits(value: number) {
 }
 
 export function formatQuickCreditsLabel(value: number) {
-  return `+${numberFormatter.format(value)}`;
+  return `+${integerFormatter.format(value)} RC`;
 }
 
 export function probabilityToSignalScore(probability: number) {

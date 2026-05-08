@@ -2,10 +2,6 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { Bookmark, Search, SlidersHorizontal } from "lucide-react";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useHorizontalDragScroll } from "@/features/home/hooks/use-horizontal-drag-scroll";
 import type {
@@ -16,13 +12,10 @@ import { formatProbability, getToneUi } from "@/features/home/lib/presentation";
 import { cn } from "@/lib/utils";
 
 type MarketsGridProps = {
-  title: string;
   tabs: MarketTab[];
   markets: MarketCard[];
   activeTab: string;
   onTabChange: (nextTab: string) => void;
-  searchQuery: string;
-  hasActiveSearch: boolean;
 };
 
 function MarketCardItem({ market }: { market: MarketCard }) {
@@ -94,30 +87,13 @@ function MarketCardItem({ market }: { market: MarketCard }) {
 }
 
 export function MarketsGrid({
-  title,
   tabs,
   markets,
   activeTab,
   onTabChange,
-  searchQuery,
-  hasActiveSearch,
 }: MarketsGridProps) {
   const { ref: tabsRef, dragScrollProps: tabsDragScrollProps } =
     useHorizontalDragScroll<HTMLDivElement>();
-  const accountRoute = "/conta" as Route;
-
-  const focusSearchInput = () => {
-    const searchInput = document.getElementById("home-search");
-
-    if (searchInput instanceof HTMLInputElement) {
-      searchInput.focus();
-      searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
-
-  const focusFilters = () => {
-    tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  };
 
   return (
     <section id="markets" className="space-y-5">
@@ -146,7 +122,7 @@ export function MarketsGrid({
       </div>
 
       {markets.length > 0 ? (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {markets.map((market) => (
             <MarketCardItem key={market.id} market={market} />
           ))}

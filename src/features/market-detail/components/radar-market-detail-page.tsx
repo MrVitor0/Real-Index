@@ -1,21 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
-import type { RadarMarketDetail } from "@/features/market-detail/contracts/radar-market-detail";
+import type {
+  RadarForecastAccountState,
+  RadarMarketDetail,
+} from "@/features/market-detail/contracts/radar-market-detail";
 import { getToneUi } from "@/features/home/lib/presentation";
 import { formatSignalScore } from "@/features/market-detail/lib/forecast";
 import { useRadarMarketDetail } from "@/features/market-detail/hooks/use-radar-market-detail";
 
+import { RadarActivePositionCard } from "./radar-active-position-card";
 import { RadarForecastPanel } from "./radar-forecast-panel";
 import { RadarMarketDetailChart } from "./radar-market-detail-chart";
 
 type RadarMarketDetailPageProps = {
   market: RadarMarketDetail;
+  initialAccountState: RadarForecastAccountState;
 };
 
-export function RadarMarketDetailPage({ market }: RadarMarketDetailPageProps) {
+export function RadarMarketDetailPage({
+  market,
+  initialAccountState,
+}: RadarMarketDetailPageProps) {
+  const [viewerState, setViewerState] =
+    useState<RadarForecastAccountState>(initialAccountState);
   const {
     data: liveMarket,
     error,
@@ -78,6 +89,10 @@ export function RadarMarketDetailPage({ market }: RadarMarketDetailPageProps) {
                 />
               </div>
 
+              {viewerState.openPosition ? (
+                <RadarActivePositionCard position={viewerState.openPosition} />
+              ) : null}
+
               {status === "error" && error ? (
                 <div className="flex items-center gap-3 rounded-2xl border border-(--market-warning)/18 bg-(--market-warning)/10 px-4 py-3 text-sm text-market-warning">
                   <AlertTriangle className="h-4 w-4" />
@@ -92,7 +107,12 @@ export function RadarMarketDetailPage({ market }: RadarMarketDetailPageProps) {
         </div>
 
         <div className="space-y-6">
-          <RadarForecastPanel market={liveMarket} onMarketUpdate={replace} />
+          <RadarForecastPanel
+            market={liveMarket}
+            initialAccountState={initialAccountState}
+            onAccountStateChange={setViewerState}
+            onMarketUpdate={replace}
+          />
         </div>
       </section>
     </main>
