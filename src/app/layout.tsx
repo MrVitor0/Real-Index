@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
 import { ForecastOrderDialogProvider } from "@/components/providers/forecast-order-dialog-provider";
 import { NeonAuthProvider } from "@/components/providers/neon-auth-provider";
@@ -141,6 +142,7 @@ export default function RootLayout({
             children
           )}
         </ForecastOrderDialogProvider>
+        <Analytics />
       </body>
     </html>
   );

@@ -350,7 +350,7 @@ export function ForecastOrderDialogProvider({
           Primeiro acesso
         </div>
         <DialogTitle className="max-w-2xl text-balance text-[1.35rem] font-semibold leading-tight text-white md:text-[1.7rem]">
-          aqui não entra dinheiro de verdade.
+          Aqui não entra dinheiro de verdade.
         </DialogTitle>
         <DialogDescription className="max-w-2xl text-sm leading-7 text-white/62 md:text-[0.98rem]">
           Todas as operações desse mercado usam REAL Credits, uma moeda virtual
