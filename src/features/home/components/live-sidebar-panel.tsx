@@ -39,8 +39,6 @@ type LiveSidebarPanelProps = {
 };
 
 type ActivityFeedVariant = "default" | "stream";
-
-const compactChampionCreditsThreshold = 9_999;
 const marketplaceRoute = "/marketplace" as Route;
 const marketplaceCarouselIntervalMs = 4_500;
 
@@ -95,14 +93,6 @@ function formatCompactRankingCredits(value: string) {
   return value.replace(/REAL Credits?/i, "R.C");
 }
 
-function formatChampionRankingCredits(item: ParticipantRankingItem) {
-  if (item.totalEquityCredits <= compactChampionCreditsThreshold) {
-    return item.totalEquityLabel;
-  }
-
-  return formatCompactRankingCredits(item.totalEquityLabel);
-}
-
 function resolveMarketplaceSpotlight(input: {
   leaderAvailableCredits: number;
   rewards: MarketplaceReward[];
@@ -142,9 +132,7 @@ function RankingListItem({
       : highlightLeader
         ? "100%"
         : "0%";
-  const valueLabel = highlightLeader
-    ? formatChampionRankingCredits(item)
-    : formatCompactRankingCredits(item.totalEquityLabel);
+  const valueLabel = formatCompactRankingCredits(item.totalEquityLabel);
 
   return (
     <div
@@ -168,18 +156,11 @@ function RankingListItem({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1">
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="truncate text-sm font-semibold text-white">
-                  {item.displayName}
-                </p>
-                {highlightLeader ? (
-                  <span className="shrink-0 rounded-full border border-market-warning/20 bg-market-warning/12 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-market-warning">
-                    lider
-                  </span>
-                ) : null}
-              </div>
+              <p className="truncate text-sm font-semibold text-white">
+                {item.displayName}
+              </p>
               <p className="truncate text-[11px] uppercase tracking-[0.16em] text-white/30">
                 @{item.username}
               </p>
@@ -187,8 +168,8 @@ function RankingListItem({
 
             <p
               className={cn(
-                "shrink-0 whitespace-nowrap font-semibold text-white",
-                highlightLeader ? "text-[0.82rem]" : "text-sm",
+                "shrink-0 whitespace-nowrap pt-0.5 text-right font-semibold leading-none text-white",
+                "text-sm",
               )}
             >
               {valueLabel}
