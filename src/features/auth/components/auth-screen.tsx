@@ -23,7 +23,7 @@ export const supportedAuthViews = [
 
 export type SupportedAuthView = (typeof supportedAuthViews)[number];
 
-const accountRoute = "/conta" as Route;
+const homeRoute = "/" as Route;
 
 const authFeatureIcons = {
   shield: ShieldCheck,
@@ -212,7 +212,7 @@ export async function AuthScreen({ view }: AuthScreenProps) {
     const session = await getServerSession();
 
     if (session?.user) {
-      redirect(accountRoute);
+      redirect(homeRoute);
     }
   }
 
@@ -283,6 +283,7 @@ export async function AuthScreen({ view }: AuthScreenProps) {
             {environment.hasNeonAuth ? (
               <AuthView
                 path={view as AuthViewPath}
+                redirectTo={homeRoute}
                 localization={authViewLocalization}
                 className="surface-noise h-full min-h-137 max-w-none rounded-[32px] border-white/8 bg-(--market-surface)/92 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)]"
                 classNames={{

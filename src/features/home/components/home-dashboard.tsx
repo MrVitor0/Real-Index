@@ -60,8 +60,15 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
     );
   }
 
-  const { homeFeed, ranking, recentActivity, communityMetrics, navbarBalance } =
-    data.data;
+  const {
+    homeFeed,
+    ranking,
+    recentActivity,
+    communityMetrics,
+    navbarBalance,
+    marketplaceRewards,
+  } = data.data;
+  const viewerAuthStatus = data.meta.auth.status;
   const { navigation, featuredMarket, featuredMarkets, openMarkets } = homeFeed;
   const heroMarkets = (
     featuredMarkets.length > 0 ? featuredMarkets : [featuredMarket]
@@ -100,7 +107,7 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
         authEnabled={authEnabled}
-        authStatus={data.meta.auth.status}
+        authStatus={viewerAuthStatus}
         initialBalance={null}
         liveBalanceState={{
           balance: navbarBalance,
@@ -108,10 +115,10 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
         }}
       />
 
-      <main className="relative mx-auto flex w-full max-w-[1880px] flex-1 flex-col gap-6 px-4 pb-10 pt-5 md:px-6 lg:px-8">
-        <section className="grid gap-6 xl:grid-cols-[minmax(270px,0.66fr)_minmax(0,2.24fr)_19rem] xl:items-start">
-          <div className="order-2 xl:order-1 xl:self-stretch">
-            <div className="h-full xl:sticky xl:top-24">
+      <main className="relative mx-auto flex w-full max-w-470 flex-1 flex-col gap-6 px-4 pb-10 pt-5 md:px-6 lg:px-8">
+        <section className="grid gap-6 xl:grid-cols-[minmax(270px,0.66fr)_minmax(0,2.24fr)_19rem] xl:items-stretch">
+          <div className="order-2 min-w-0 xl:order-1 xl:self-stretch">
+            <div className="h-full min-w-0 xl:sticky xl:top-24">
               <LiveSidebarPanel
                 showActivity={false}
                 className="h-full"
@@ -121,17 +128,21 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
                   rankingStatus: status,
                   activityItems: recentActivity.items.slice(0, 3),
                   activityStatus: status,
+                  marketplaceRewards,
                 }}
               />
             </div>
           </div>
 
-          <div className="order-1 min-w-0 xl:order-2">
-            <FeaturedMarketPanel markets={heroMarkets} />
+          <div className="order-1 min-w-0 xl:order-2 xl:self-stretch">
+            <FeaturedMarketPanel
+              markets={heroMarkets}
+              viewerAuthStatus={viewerAuthStatus}
+            />
           </div>
 
-          <div className="order-3 xl:self-stretch">
-            <div className="h-full xl:sticky xl:top-24">
+          <div className="order-3 min-w-0 xl:self-stretch">
+            <div className="h-full min-w-0 xl:sticky xl:top-24">
               <SidebarPanel
                 liveData={{
                   activityItems: recentActivity.items.slice(0, 3),
@@ -150,11 +161,12 @@ export function HomeDashboard({ authEnabled }: HomeDashboardProps) {
             tabs={openMarkets.tabs}
             markets={filteredMarkets}
             activeTab={resolvedActiveTab}
+            viewerAuthStatus={viewerAuthStatus}
             onTabChange={setActiveTab}
           />
 
           {status === "error" && error ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-(--market-warning)/18 bg-(--market-warning)/10 px-4 py-3 text-sm text-market-warning">
+            <div className="flex items-center gap-3 rounded-2xl border border-market-warning/18 bg-market-warning/10 px-4 py-3 text-sm text-market-warning">
               <AlertTriangle className="h-4 w-4" />
               <span>
                 Mostrando o ultimo snapshot valido enquanto o endpoint se

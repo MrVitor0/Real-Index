@@ -1,0 +1,1 @@
+ALTER TABLE "marketplace_redemptions" ADD COLUMN "result_payload" jsonb;

@@ -5,6 +5,7 @@ import type {
 } from "@/features/marketplace/contracts/marketplace";
 import {
   marketplaceCatalogSchema,
+  marketplaceRedemptionResultSchema,
   marketplaceRedemptionSchema,
   marketplaceRewardSchema,
 } from "@/features/marketplace/contracts/marketplace";
@@ -17,9 +18,11 @@ type MarketplaceRewardSeed = {
   subtitle: string;
   backgroundImageUrl: string;
   creditCost: number;
-  isRedeemed?: boolean;
+  redemptionCount?: number;
+  redemptionLimit?: number;
   isActive?: boolean;
   sortOrder?: number;
+  createdAt?: Date;
 };
 
 type MarketplaceRedemptionSeed = {
@@ -29,6 +32,7 @@ type MarketplaceRedemptionSeed = {
   creditsSpent: number;
   status: MarketplaceRedemption["status"];
   createdAt: Date;
+  result?: unknown;
 };
 
 type MarketplaceBalanceSeed = {
@@ -41,15 +45,40 @@ const redemptionDateFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 
+export const maxMarketplaceRewardRedemptionsPerAccount = 3;
+
 function roundCredits(value: number) {
   return Math.max(0, Math.round(value));
+}
+
+export function getMarketplaceRedemptionLimitMessage(
+  redemptionLimit = maxMarketplaceRewardRedemptionsPerAccount,
+) {
+  return `Esse item do marketplace atingiu o limite de ${redemptionLimit} resgates por conta.`;
+}
+
+export function parseMarketplaceRedemptionResult(result: unknown) {
+  if (result == null) {
+    return null;
+  }
+
+  const parsedResult = marketplaceRedemptionResultSchema.safeParse(result);
+
+  return parsedResult.success ? parsedResult.data : null;
 }
 
 export function buildMarketplaceReward(
   reward: MarketplaceRewardSeed,
   availableCredits: number,
 ): MarketplaceReward {
-  const isRedeemed = reward.isRedeemed ?? false;
+  const redemptionCount = Math.max(0, Math.trunc(reward.redemptionCount ?? 0));
+  const redemptionLimit = Math.max(
+    1,
+    Math.trunc(
+      reward.redemptionLimit ?? maxMarketplaceRewardRedemptionsPerAccount,
+    ),
+  );
+  const isRedeemed = redemptionCount >= redemptionLimit;
 
   return marketplaceRewardSchema.parse({
     id: reward.id,
@@ -61,6 +90,8 @@ export function buildMarketplaceReward(
     creditCostLabel: formatCredits(reward.creditCost),
     canRedeem: !isRedeemed && availableCredits >= reward.creditCost,
     isRedeemed,
+    redemptionCount,
+    redemptionLimit,
     isActive: reward.isActive ?? true,
     sortOrder: reward.sortOrder ?? 0,
   });
@@ -76,6 +107,7 @@ export function buildMarketplaceRedemption(
     creditsSpent: roundCredits(redemption.creditsSpent),
     creditsSpentLabel: formatCredits(redemption.creditsSpent),
     status: redemption.status,
+    result: parseMarketplaceRedemptionResult(redemption.result),
     createdAtLabel: redemptionDateFormatter.format(redemption.createdAt),
   });
 }
@@ -88,25 +120,19 @@ export function buildMarketplaceCatalog(input: {
   const redemptions = (input.redemptions ?? []).sort(
     (left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
   );
-  const redeemedRewardIds = new Set(
-    redemptions.map((redemption) => redemption.rewardId),
-  );
+  const redemptionCountByRewardId = redemptions.reduce((counts, redemption) => {
+    counts.set(redemption.rewardId, (counts.get(redemption.rewardId) ?? 0) + 1);
+
+    return counts;
+  }, new Map<string, number>());
   const rewards = input.rewards
     .filter((reward) => reward.isActive ?? true)
-    .sort((left, right) => {
-      const orderDelta = (left.sortOrder ?? 0) - (right.sortOrder ?? 0);
-
-      if (orderDelta !== 0) {
-        return orderDelta;
-      }
-
-      return left.title.localeCompare(right.title, "pt-BR");
-    })
+    .sort((left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0))
     .map((reward) =>
       buildMarketplaceReward(
         {
           ...reward,
-          isRedeemed: redeemedRewardIds.has(reward.id),
+          redemptionCount: redemptionCountByRewardId.get(reward.id) ?? 0,
         },
         input.balance.availableCredits,
       ),
@@ -126,26 +152,32 @@ export function buildMarketplaceCatalog(input: {
     redemptions: recentRedemptions,
     helperTitle: "Premios de comunidade",
     helperDescription:
-      "Os itens do marketplace usam apenas REAL Credits virtuais. Nao existe compra de dinheiro, saque ou recompensa financeira.",
+      "Os itens do marketplace usam apenas REAL Credits virtuais. Não existe compra de dinheiro, saque ou recompensa financeira.",
   });
 }
 
 export function previewMarketplaceRedemption(input: {
   availableCredits: number;
   reward: Pick<MarketplaceRewardSeed, "title" | "creditCost">;
-  alreadyRedeemed?: boolean;
+  redemptionCount?: number;
+  redemptionLimit?: number;
 }) {
   const availableCredits = roundCredits(input.availableCredits);
   const rewardCost = roundCredits(input.reward.creditCost);
+  const redemptionCount = Math.max(0, Math.trunc(input.redemptionCount ?? 0));
+  const redemptionLimit = Math.max(
+    1,
+    Math.trunc(
+      input.redemptionLimit ?? maxMarketplaceRewardRedemptionsPerAccount,
+    ),
+  );
 
   if (rewardCost <= 0) {
     throw new Error("Esse item do marketplace esta com valor invalido.");
   }
 
-  if (input.alreadyRedeemed) {
-    throw new Error(
-      "Esse item do marketplace ja foi resgatado pela sua conta.",
-    );
+  if (redemptionCount >= redemptionLimit) {
+    throw new Error(getMarketplaceRedemptionLimitMessage(redemptionLimit));
   }
 
   if (availableCredits < rewardCost) {

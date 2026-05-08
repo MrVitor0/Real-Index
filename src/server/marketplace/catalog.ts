@@ -1,19 +1,23 @@
 import "server-only";
 
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
   buildMarketplaceCatalog,
   buildMarketplaceRedemption,
+  getMarketplaceRedemptionLimitMessage,
+  maxMarketplaceRewardRedemptionsPerAccount,
   previewMarketplaceRedemption,
 } from "@/features/marketplace/lib/marketplace";
 import {
   marketplaceCatalogSchema,
   marketplaceRedeemResponseSchema,
+  marketplaceRedemptionResultSchema,
   marketplaceRedemptionStatusSchema,
   type MarketplaceCatalog,
   type MarketplaceRedeemResponse,
+  type MarketplaceRedemptionResult,
 } from "@/features/marketplace/contracts/marketplace";
 import { formatCredits } from "@/features/market-detail/lib/forecast";
 import { getDb } from "@/server/db/client";
@@ -26,6 +30,7 @@ import {
   type MarketplaceRedemptionStatus,
 } from "@/server/db/schema";
 import { syncViewerProfile } from "@/server/markets/catalog";
+import { createMarketplaceRedemptionResult } from "@/server/marketplace/reward-effects";
 
 type ViewerIdentity = {
   id: string;
@@ -41,6 +46,7 @@ type RedemptionMutationRow = {
   rewardTitle: string;
   status: MarketplaceRedemptionStatus;
   createdAt: Date;
+  resultPayload: MarketplaceRedemptionResult | null;
 };
 
 const globalForMarketplaceCatalog = globalThis as typeof globalThis & {
@@ -54,23 +60,18 @@ const redemptionMutationRowSchema = z.object({
   rewardTitle: z.string().min(1),
   status: marketplaceRedemptionStatusSchema,
   createdAt: z.coerce.date(),
+  resultPayload: z.preprocess((value) => {
+    if (typeof value !== "string") {
+      return value ?? null;
+    }
+
+    try {
+      return JSON.parse(value) as unknown;
+    } catch {
+      return value;
+    }
+  }, marketplaceRedemptionResultSchema.nullable()),
 });
-
-function isDuplicateMarketplaceRedemptionError(error: unknown) {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-
-  const errorWithCode = error as Error & {
-    code?: string;
-    cause?: {
-      code?: string;
-    };
-  };
-  const errorCode = errorWithCode.code ?? errorWithCode.cause?.code;
-
-  return errorCode === "23505";
-}
 
 function isMissingMarketplaceStorageError(error: unknown) {
   if (!(error instanceof Error)) {
@@ -107,7 +108,7 @@ function warnMissingMarketplaceStorageOnce() {
 
   globalForMarketplaceCatalog.__realSeverityMarketplaceStorageWarningShown = true;
   console.warn(
-    "Marketplace storage is unavailable. Apply migration 0003 before enabling marketplace queries.",
+    "Marketplace storage is unavailable. Apply pending marketplace migrations before enabling marketplace queries.",
   );
 }
 
@@ -128,7 +129,7 @@ function buildMarketplaceStorageUnavailableCatalog(input: {
     ...catalog,
     helperTitle: "Marketplace em configuracao",
     helperDescription:
-      "O schema do marketplace ainda nao foi aplicado no banco atual. Rode a migration 0003 antes de publicar ou consumir os perks.",
+      "O schema do marketplace ainda nao foi aplicado no banco atual. Rode as migrations pendentes antes de publicar ou consumir os perks.",
   });
 }
 
@@ -142,7 +143,10 @@ export async function getMarketplaceCatalog(
 
   try {
     [rewardRows, redemptionRows] = await Promise.all([
-      db.select().from(marketplaceRewards),
+      db
+        .select()
+        .from(marketplaceRewards)
+        .orderBy(asc(marketplaceRewards.sortOrder)),
       profile
         ? db
             .select()
@@ -179,6 +183,7 @@ export async function getMarketplaceCatalog(
         creditCost: reward.creditCost,
         isActive: reward.isActive,
         sortOrder: reward.sortOrder,
+        createdAt: reward.createdAt,
       })),
       redemptions: redemptionRows.map((redemption) => ({
         id: redemption.id,
@@ -187,6 +192,7 @@ export async function getMarketplaceCatalog(
         creditsSpent: redemption.creditsSpent,
         status: redemption.status,
         createdAt: redemption.createdAt,
+        result: redemption.resultPayload,
       })),
     }),
   );
@@ -211,7 +217,7 @@ async function getActiveRewardById(rewardId: string) {
     if (isMissingMarketplaceStorageError(error)) {
       warnMissingMarketplaceStorageOnce();
       throw new Error(
-        "Marketplace indisponivel neste banco. Aplique a migration 0003.",
+        "Marketplace indisponivel neste banco. Aplique as migrations pendentes.",
       );
     }
 
@@ -230,30 +236,29 @@ async function readCurrentAvailableCredits(profileId: string) {
   return profile?.availableCredits ?? 0;
 }
 
-async function findMarketplaceRedemption(input: {
+async function countMarketplaceRedemptions(input: {
   profileId: string;
   rewardId: string;
 }) {
   const db = getDb();
 
   try {
-    const [redemption] = await db
-      .select({ id: marketplaceRedemptions.id })
+    const [summary] = await db
+      .select({ redemptionCount: sql<number>`count(*)::integer` })
       .from(marketplaceRedemptions)
       .where(
         and(
           eq(marketplaceRedemptions.profileId, input.profileId),
           eq(marketplaceRedemptions.rewardId, input.rewardId),
         ),
-      )
-      .limit(1);
+      );
 
-    return redemption ?? null;
+    return Number(summary?.redemptionCount ?? 0);
   } catch (error) {
     if (isMissingMarketplaceStorageError(error)) {
       warnMissingMarketplaceStorageOnce();
       throw new Error(
-        "Marketplace indisponivel neste banco. Aplique a migration 0003.",
+        "Marketplace indisponivel neste banco. Aplique as migrations pendentes.",
       );
     }
 
@@ -266,18 +271,39 @@ async function persistMarketplaceRedemption(input: {
   rewardId: string;
   rewardTitle: string;
   creditsSpent: number;
+  resultPayload: MarketplaceRedemptionResult | null;
 }) {
   const db = getDb();
   const persistenceTimestamp = new Date();
+  const resultPayloadJson = input.resultPayload
+    ? JSON.stringify(input.resultPayload)
+    : null;
+
   try {
     const result = await db.execute(sql<RedemptionMutationRow>`
-      WITH updated_profile AS (
+      WITH redemption_guard AS (
+        SELECT pg_advisory_xact_lock(
+          hashtext(${input.profileId}),
+          hashtext(${input.rewardId})
+        ) AS guard_acquired
+      ),
+      redemption_state AS (
+        SELECT COUNT(*)::integer AS redemption_count
+        FROM marketplace_redemptions, redemption_guard
+        WHERE profile_id = ${input.profileId}
+          AND reward_id = ${input.rewardId}
+      ),
+      updated_profile AS (
         UPDATE profiles
         SET
           available_credits = available_credits - ${input.creditsSpent},
           updated_at = ${persistenceTimestamp}
         WHERE id = ${input.profileId}
           AND available_credits >= ${input.creditsSpent}
+          AND (
+            SELECT redemption_count
+            FROM redemption_state
+          ) < ${maxMarketplaceRewardRedemptionsPerAccount}
         RETURNING available_credits
       ),
       inserted_redemption AS (
@@ -286,6 +312,7 @@ async function persistMarketplaceRedemption(input: {
           reward_id,
           reward_title_snapshot,
           credits_spent,
+          result_payload,
           status,
           created_at,
           updated_at
@@ -295,6 +322,7 @@ async function persistMarketplaceRedemption(input: {
           ${input.rewardId},
           ${input.rewardTitle},
           ${input.creditsSpent},
+          ${resultPayloadJson}::jsonb,
           'pending',
           ${persistenceTimestamp},
           ${persistenceTimestamp}
@@ -302,6 +330,7 @@ async function persistMarketplaceRedemption(input: {
         RETURNING
           id AS "redemptionId",
           credits_spent AS "creditsSpent",
+          result_payload AS "resultPayload",
           status AS "status",
           created_at AS "createdAt"
       )
@@ -311,7 +340,8 @@ async function persistMarketplaceRedemption(input: {
         inserted_redemption."creditsSpent",
         ${input.rewardTitle} AS "rewardTitle",
         inserted_redemption."status",
-        inserted_redemption."createdAt"
+        inserted_redemption."createdAt",
+        inserted_redemption."resultPayload"
       FROM inserted_redemption
       INNER JOIN updated_profile ON true
     `);
@@ -320,16 +350,10 @@ async function persistMarketplaceRedemption(input: {
 
     return row ? redemptionMutationRowSchema.parse(row) : null;
   } catch (error) {
-    if (isDuplicateMarketplaceRedemptionError(error)) {
-      throw new Error(
-        "Esse item do marketplace ja foi resgatado pela sua conta.",
-      );
-    }
-
     if (isMissingMarketplaceStorageError(error)) {
       warnMissingMarketplaceStorageOnce();
       throw new Error(
-        "Marketplace indisponivel neste banco. Aplique a migration 0003.",
+        "Marketplace indisponivel neste banco. Aplique as migrations pendentes.",
       );
     }
 
@@ -348,7 +372,7 @@ export async function redeemMarketplaceReward(input: {
     throw new Error("Item do marketplace nao encontrado.");
   }
 
-  const existingRedemption = await findMarketplaceRedemption({
+  const redemptionCount = await countMarketplaceRedemptions({
     profileId: profile.id,
     rewardId: reward.id,
   });
@@ -359,7 +383,7 @@ export async function redeemMarketplaceReward(input: {
       title: reward.title,
       creditCost: reward.creditCost,
     },
-    alreadyRedeemed: Boolean(existingRedemption),
+    redemptionCount,
   });
 
   const mutation = await persistMarketplaceRedemption({
@@ -367,6 +391,7 @@ export async function redeemMarketplaceReward(input: {
     rewardId: reward.id,
     rewardTitle: reward.title,
     creditsSpent: reward.creditCost,
+    resultPayload: createMarketplaceRedemptionResult(reward),
   });
 
   if (!mutation) {
@@ -376,6 +401,19 @@ export async function redeemMarketplaceReward(input: {
 
     if (currentAvailableCredits < reward.creditCost) {
       throw new Error(`Saldo insuficiente para resgatar ${reward.title}.`);
+    }
+
+    const currentRedemptionCount = await countMarketplaceRedemptions({
+      profileId: profile.id,
+      rewardId: reward.id,
+    });
+
+    if (currentRedemptionCount >= maxMarketplaceRewardRedemptionsPerAccount) {
+      throw new Error(
+        getMarketplaceRedemptionLimitMessage(
+          maxMarketplaceRewardRedemptionsPerAccount,
+        ),
+      );
     }
 
     throw new Error("Nao foi possivel registrar esse resgate agora.");
@@ -388,6 +426,7 @@ export async function redeemMarketplaceReward(input: {
     creditsSpent: mutation.creditsSpent,
     status: mutation.status,
     createdAt: mutation.createdAt,
+    result: mutation.resultPayload,
   });
 
   return marketplaceRedeemResponseSchema.parse({

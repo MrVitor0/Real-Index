@@ -6,6 +6,7 @@ import {
   homeFeedDataSchema,
   routeAuthSchema,
 } from "@/features/home/contracts/home-feed";
+import { marketplaceRewardSchema } from "@/features/marketplace/contracts/marketplace";
 import { participantRankingDataSchema } from "@/features/home/contracts/participant-ranking";
 import { recentActivityDataSchema } from "@/features/home/contracts/recent-activity";
 
@@ -15,6 +16,7 @@ export const homeLiveDataSchema = z.object({
   recentActivity: recentActivityDataSchema,
   communityMetrics: communityMetricsDataSchema,
   navbarBalance: navbarBalanceSchema,
+  marketplaceRewards: z.array(marketplaceRewardSchema),
 });
 
 export const homeLiveResponseSchema = z.object({

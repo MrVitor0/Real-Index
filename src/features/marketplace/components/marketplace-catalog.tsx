@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { Route } from "next";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -11,14 +9,14 @@ import {
   Gift,
   Layers3,
   LoaderCircle,
-  Sparkles,
   Ticket,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { dispatchNavbarBalanceSync } from "@/features/account/lib/navbar-balance-sync";
+import { DeleteRandomRouletteDialog } from "@/features/marketplace/components/delete-random-roulette-dialog";
 import type {
+  DeleteRandomRedemptionResult,
   MarketplaceCatalog,
   MarketplaceRedeemResponse,
   MarketplaceReward,
@@ -34,9 +32,6 @@ type FeedbackState = {
   kind: "success" | "error";
   message: string;
 };
-
-const accountRoute = "/conta" as Route;
-const createMarketRoute = "/conta/mercados/novo" as Route;
 
 const redemptionStatusMap = {
   pending: {
@@ -60,15 +55,21 @@ function updateCatalogAfterRedeem(
   return {
     ...catalog,
     balance: response.balance,
-    rewards: catalog.rewards.map((reward) => ({
-      ...reward,
-      isRedeemed:
-        reward.id === response.redemption.rewardId || reward.isRedeemed,
-      canRedeem:
-        reward.id !== response.redemption.rewardId &&
-        !reward.isRedeemed &&
-        reward.creditCost <= response.balance.availableCredits,
-    })),
+    rewards: catalog.rewards.map((reward) => {
+      const redemptionCount =
+        reward.id === response.redemption.rewardId
+          ? reward.redemptionCount + 1
+          : reward.redemptionCount;
+      const isRedeemed = redemptionCount >= reward.redemptionLimit;
+
+      return {
+        ...reward,
+        redemptionCount,
+        isRedeemed,
+        canRedeem:
+          !isRedeemed && reward.creditCost <= response.balance.availableCredits,
+      };
+    }),
     redemptions: [response.redemption, ...catalog.redemptions].slice(0, 8),
   } satisfies MarketplaceCatalog;
 }
@@ -82,18 +83,17 @@ function MarketplaceRewardCard(props: {
   const { reward, authStatus, pending, onRedeem } = props;
   const actionLabel = pending
     ? "Processando"
-    : reward.isRedeemed
-      ? "Ja resgatado"
-      : authStatus === "anonymous"
-        ? "Entre para resgatar"
+    : authStatus === "anonymous"
+      ? "Entre para resgatar"
+      : reward.isRedeemed
+        ? "Limite atingido"
         : reward.canRedeem
           ? "Trocar agora"
           : "Saldo insuficiente";
-  const isActionEnabled =
-    authStatus === "authenticated" && !reward.isRedeemed && reward.canRedeem;
+  const isActionEnabled = authStatus === "authenticated" && reward.canRedeem;
 
   return (
-    <article className="group relative min-h-[320px] overflow-hidden rounded-[30px] border border-white/10 bg-(--market-surface)/92 shadow-[0_28px_80px_-48px_rgba(0,0,0,0.9)]">
+    <article className="group relative h-145 overflow-hidden rounded-[30px] border border-white/10 bg-(--market-surface)/92 shadow-[0_28px_80px_-48px_rgba(0,0,0,0.9)]">
       <div
         className="absolute inset-0 bg-cover bg-center opacity-90 transition-transform duration-500 group-hover:scale-105"
         style={{ backgroundImage: `url("${reward.backgroundImageUrl}")` }}
@@ -105,9 +105,16 @@ function MarketplaceRewardCard(props: {
           <Badge className="rounded-full border border-white/14 bg-black/35 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-sm hover:bg-black/35">
             {reward.creditCostLabel}
           </Badge>
-          {reward.isRedeemed ? (
-            <Badge className="rounded-full border border-emerald-400/22 bg-emerald-400/12 px-3 py-1 text-[11px] font-medium text-emerald-100 backdrop-blur-sm hover:bg-emerald-400/12">
-              Resgate unico
+          {reward.redemptionCount > 0 ? (
+            <Badge
+              className={cn(
+                "rounded-full px-3 py-1 text-[11px] font-medium backdrop-blur-sm",
+                reward.isRedeemed
+                  ? "border border-amber-400/22 bg-amber-400/12 text-amber-100 hover:bg-amber-400/12"
+                  : "border border-sky-400/22 bg-sky-400/12 text-sky-100 hover:bg-sky-400/12",
+              )}
+            >
+              {reward.redemptionCount}/{reward.redemptionLimit} resgates
             </Badge>
           ) : (
             <span className="rounded-full border border-white/10 bg-black/20 p-2 text-white/72 backdrop-blur-sm">
@@ -132,7 +139,7 @@ function MarketplaceRewardCard(props: {
             disabled={pending || !isActionEnabled}
             onClick={() => onRedeem(reward.id)}
             className={cn(
-              "mt-6 inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-sm font-medium transition-colors",
+              "mt-6 inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-sm font-medium transition-colors enabled:cursor-pointer",
               isActionEnabled
                 ? "bg-white text-slate-950 hover:bg-white/90 disabled:bg-white/70"
                 : "border border-white/10 bg-white/6 text-white/50",
@@ -164,15 +171,12 @@ export function MarketplaceCatalog({
   const router = useRouter();
   const [catalog, setCatalog] = useState(initialCatalog);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [deleteRandomResult, setDeleteRandomResult] =
+    useState<DeleteRandomRedemptionResult | null>(null);
+  const [shouldRefreshAfterRoulette, setShouldRefreshAfterRoulette] =
+    useState(false);
   const [pendingRewardId, setPendingRewardId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-  const redeemableCount = catalog.rewards.filter(
-    (reward) => reward.canRedeem,
-  ).length;
-  const pendingCount = catalog.redemptions.filter(
-    (redemption) => redemption.status === "pending",
-  ).length;
-
   async function handleRedeem(rewardId: string) {
     setPendingRewardId(rewardId);
     setFeedback(null);
@@ -203,9 +207,15 @@ export function MarketplaceCatalog({
         kind: "success",
         message: parsedResponse.message,
       });
-      startTransition(() => {
-        router.refresh();
-      });
+
+      if (parsedResponse.redemption.result?.kind === "delete-random") {
+        setDeleteRandomResult(parsedResponse.redemption.result);
+        setShouldRefreshAfterRoulette(true);
+      } else {
+        startTransition(() => {
+          router.refresh();
+        });
+      }
     } catch (error) {
       setFeedback({
         kind: "error",
@@ -228,32 +238,11 @@ export function MarketplaceCatalog({
               Troca sem valor monetario
             </Badge>
             <h1 className="mt-3 max-w-[24ch] text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-              Marketplace de perks para REAL Credits da comunidade.
+              Marketplace da comunidade.
             </h1>
             <p className="mt-2 max-w-[62ch] text-sm leading-6 text-white/68">
               {catalog.helperDescription}
             </p>
-
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Link
-                href={createMarketRoute}
-                className={buttonVariants({
-                  className: "h-10 rounded-2xl px-4",
-                })}
-              >
-                Criar um mercado
-              </Link>
-              <Link
-                href={accountRoute}
-                className={buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-2xl border-white/10 bg-white/6 px-4 text-white/76 hover:bg-white/10 hover:text-white",
-                })}
-              >
-                Voltar para conta
-              </Link>
-            </div>
 
             {feedback ? (
               <div
@@ -372,6 +361,11 @@ export function MarketplaceCatalog({
                           <p className="mt-1 text-xs text-white/46">
                             {redemption.createdAtLabel}
                           </p>
+                          {redemption.result ? (
+                            <p className="mt-2 text-xs text-amber-100/76">
+                              Resultado: {redemption.result.outcome.label}
+                            </p>
+                          ) : null}
                         </div>
 
                         <Badge
@@ -404,6 +398,24 @@ export function MarketplaceCatalog({
           </section>
         </aside>
       </section>
+
+      <DeleteRandomRouletteDialog
+        key={deleteRandomResult?.createdAt ?? "delete-random-roulette"}
+        result={deleteRandomResult}
+        open={Boolean(deleteRandomResult)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteRandomResult(null);
+
+            if (shouldRefreshAfterRoulette) {
+              setShouldRefreshAfterRoulette(false);
+              startTransition(() => {
+                router.refresh();
+              });
+            }
+          }
+        }}
+      />
     </div>
   );
 }

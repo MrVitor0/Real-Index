@@ -3,6 +3,7 @@ import { enforceRateLimit } from "@/server/api/rate-limit";
 import { createRouteContext } from "@/server/api/route-context";
 import { getCommunityMetrics } from "@/server/home/community-metrics";
 import { getParticipantRanking } from "@/server/home/participant-ranking";
+import { getMarketplaceCatalog } from "@/server/marketplace/catalog";
 import { getRecentActivityFeed } from "@/server/activity/log";
 import { getHomeFeedData } from "@/server/markets/catalog";
 import { getViewerForecastBalance } from "@/server/markets/trading";
@@ -15,14 +16,21 @@ export const dynamic = "force-dynamic";
 async function buildHomeLiveResponse(
   context: Awaited<ReturnType<typeof createRouteContext>>,
 ) {
-  const [homeFeed, ranking, recentActivity, communityMetrics, navbarBalance] =
-    await Promise.all([
-      getHomeFeedData(),
-      getParticipantRanking({ limit: 3 }),
-      getRecentActivityFeed({ limit: 3 }),
-      getCommunityMetrics(),
-      getViewerForecastBalance(context.viewer),
-    ]);
+  const [
+    homeFeed,
+    ranking,
+    recentActivity,
+    communityMetrics,
+    navbarBalance,
+    marketplaceCatalog,
+  ] = await Promise.all([
+    getHomeFeedData(),
+    getParticipantRanking({ limit: 3 }),
+    getRecentActivityFeed({ limit: 3 }),
+    getCommunityMetrics(),
+    getViewerForecastBalance(context.viewer),
+    getMarketplaceCatalog(null),
+  ]);
 
   return homeLiveResponseSchema.parse({
     meta: {
@@ -36,6 +44,7 @@ async function buildHomeLiveResponse(
       recentActivity,
       communityMetrics,
       navbarBalance,
+      marketplaceRewards: marketplaceCatalog.rewards,
     },
   });
 }

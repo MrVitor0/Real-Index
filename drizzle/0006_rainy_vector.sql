@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS "marketplace_redemptions_profile_reward_unique_idx";--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "marketplace_redemptions_profile_reward_idx" ON "marketplace_redemptions" USING btree ("profile_id","reward_id");

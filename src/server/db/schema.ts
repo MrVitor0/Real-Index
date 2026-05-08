@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -349,6 +350,7 @@ export const marketplaceRedemptions = pgTable(
       length: 140,
     }).notNull(),
     creditsSpent: integer("credits_spent").notNull(),
+    resultPayload: jsonb("result_payload"),
     status: marketplaceRedemptionStatusEnum("status")
       .notNull()
       .default("pending"),
@@ -360,7 +362,7 @@ export const marketplaceRedemptions = pgTable(
       .defaultNow(),
   },
   (table) => [
-    uniqueIndex("marketplace_redemptions_profile_reward_unique_idx").on(
+    index("marketplace_redemptions_profile_reward_idx").on(
       table.profileId,
       table.rewardId,
     ),

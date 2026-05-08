@@ -440,14 +440,22 @@ export function CreateMarketForm() {
                   }))
                 }
                 className={cn(
-                  "h-11 w-full rounded-xl border border-white/8 bg-white/4 px-3 text-sm text-white outline-none",
+                  "scheme-dark h-11 w-full rounded-xl border border-white/8 bg-white/4 px-3 text-sm text-white outline-none",
                   getFieldError(fieldErrors, "tone")
                     ? "border-market-warning/40"
                     : null,
                 )}
+                style={{ colorScheme: "dark" }}
               >
                 {toneOptions.map((toneOption) => (
-                  <option key={toneOption.value} value={toneOption.value}>
+                  <option
+                    key={toneOption.value}
+                    value={toneOption.value}
+                    style={{
+                      backgroundColor: "var(--background)",
+                      color: "var(--foreground)",
+                    }}
+                  >
                     {toneOption.label}
                   </option>
                 ))}
